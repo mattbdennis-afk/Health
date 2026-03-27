@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matt Dennis — Health Intelligence Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c14;
+  --surface: #0e1420;
+  --card: #131824;
+  --card2: #171e2e;
+  --border: #1e2740;
+  --border2: #243050;
+  --text: #e2e8f8;
+  --muted: #6b7898;
+  --muted2: #8892b0;
+  --good: #22d3a5;
+  --warn: #f5b942;
+  --bad: #f05a6e;
+  --accent: #5b8cf5;
+  --accent2: #9b7efc;
+  --accent3: #38c4e0;
+  --neutral: #5b8cf5;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;min-height:100vh;font-size:14px;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#0a1020 0%,#0f1830 100%);border-bottom:1px solid var(–border);padding:20px 36px;display:flex;align-items:center;justify-content:space-between;}
+.header-brand{display:flex;align-items:center;gap:16px;}
+.header-logo{width:42px;height:42px;background:linear-gradient(135deg,var(–accent),var(–accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.header-title h1{font-family:‘Playfair Display’,serif;font-size:20px;letter-spacing:0.2px;}
+.header-title p{color:var(–muted2);font-size:12px;margin-top:2px;}
+.header-meta{display:flex;gap:10px;align-items:center;}
+.meta-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(91,140,245,0.1);border:1px solid rgba(91,140,245,0.25);color:var(–accent);padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;font-family:‘IBM Plex Mono’,monospace;}
+.meta-chip.warn{background:rgba(245,185,66,0.1);border-color:rgba(245,185,66,0.3);color:var(–warn);}
+.meta-chip.bad{background:rgba(240,90,110,0.1);border-color:rgba(240,90,110,0.3);color:var(–bad);}
+
+/* NAV */
+.nav{background:var(–surface);border-bottom:1px solid var(–border);padding:0 36px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-btn{padding:13px 18px;font-size:12px;font-weight:500;color:var(–muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:‘IBM Plex Sans’,sans-serif;letter-spacing:0.3px;display:flex;align-items:center;gap:6px;}
+.nav-btn:hover{color:var(–text);}
+.nav-btn.active{color:var(–accent);border-bottom-color:var(–accent);}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:0.7;}
+
+/* LAYOUT */
+.content{padding:28px 36px;max-width:1500px;margin:0 auto;}
+.section{display:none;}
+.section.active{display:block;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px;}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:18px;}
+.grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:18px;}
+@media(max-width:1100px){.grid-3,.grid-4{grid-template-columns:1fr 1fr;}.grid-2-1,.grid-1-2{grid-template-columns:1fr;}}
+@media(max-width:750px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+/* CARDS */
+.card{background:var(–card);border:1px solid var(–border);border-radius:14px;padding:22px;}
+.card-sm{background:var(–card);border:1px solid var(–border);border-radius:12px;padding:16px;}
+.card-title{font-size:10px;font-weight:600;color:var(–muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.card-title-badge{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:600;text-transform:none;letter-spacing:0;}
+.badge-good{background:rgba(34,211,165,0.15);color:var(–good);}
+.badge-warn{background:rgba(245,185,66,0.15);color:var(–warn);}
+.badge-bad{background:rgba(240,90,110,0.15);color:var(–bad);}
+.badge-neutral{background:rgba(91,140,245,0.15);color:var(–accent);}
+.badge-purple{background:rgba(155,126,252,0.15);color:var(–accent2);}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{background:var(–card);border:1px solid var(–border);border-radius:12px;padding:18px 16px;position:relative;overflow:hidden;}
+.stat-card::before{content:’’;position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.good::before{background:linear-gradient(90deg,var(–good),transparent);}
+.stat-card.warn::before{background:linear-gradient(90deg,var(–warn),transparent);}
+.stat-card.bad::before{background:linear-gradient(90deg,var(–bad),transparent);}
+.stat-card.neutral::before{background:linear-gradient(90deg,var(–accent),transparent);}
+.stat-card.purple::before{background:linear-gradient(90deg,var(–accent2),transparent);}
+.stat-label{font-size:10px;font-weight:600;color:var(–muted);text-transform:uppercase;letter-spacing:0.8px;}
+.stat-value{font-size:26px;font-weight:600;margin:6px 0 4px;font-family:‘IBM Plex Mono’,monospace;}
+.stat-card.good .stat-value{color:var(–good);}
+.stat-card.warn .stat-value{color:var(–warn);}
+.stat-card.bad .stat-value{color:var(–bad);}
+.stat-card.neutral .stat-value{color:var(–accent);}
+.stat-card.purple .stat-value{color:var(–accent2);}
+.stat-sub{font-size:11px;color:var(–muted2);}
+
+/* ALERTS */
+.alert{border-radius:10px;padding:14px 16px;margin-bottom:12px;border-left:3px solid;font-size:13px;line-height:1.55;}
+.alert-bad{background:rgba(240,90,110,0.07);border-color:var(–bad);}
+.alert-warn{background:rgba(245,185,66,0.07);border-color:var(–warn);}
+.alert-good{background:rgba(34,211,165,0.07);border-color:var(–good);}
+.alert-blue{background:rgba(91,140,245,0.07);border-color:var(–accent);}
+.alert-purple{background:rgba(155,126,252,0.07);border-color:var(–accent2);}
+.alert-title{font-weight:600;margin-bottom:5px;font-size:13px;}
+.alert-bad .alert-title{color:var(–bad);}
+.alert-warn .alert-title{color:var(–warn);}
+.alert-good .alert-title{color:var(–good);}
+.alert-blue .alert-title{color:var(–accent);}
+.alert-purple .alert-title{color:var(–accent2);}
+
+/* SECTION HEADERS */
+.sec-head{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(–border);}
+.sec-head h2{font-family:‘Playfair Display’,serif;font-size:20px;}
+.sec-head-badges{display:flex;gap:8px;margin-left:auto;}
+
+/* TABLE */
+.htable{width:100%;border-collapse:collapse;}
+.htable th{font-size:10px;font-weight:600;color:var(–muted);text-transform:uppercase;letter-spacing:0.8px;text-align:left;padding:8px 12px;border-bottom:1px solid var(–border);white-space:nowrap;}
+.htable td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;vertical-align:middle;}
+.htable tr:last-child td{border-bottom:none;}
+.htable tr:hover td{background:rgba(255,255,255,0.02);}
+.htable td:first-child{font-weight:500;}
+
+/* STATUS PILLS */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.pill-good{background:rgba(34,211,165,0.12);color:var(–good);}
+.pill-warn{background:rgba(245,185,66,0.12);color:var(–warn);}
+.pill-bad{background:rgba(240,90,110,0.12);color:var(–bad);}
+.pill-neutral{background:rgba(91,140,245,0.1);color:var(–accent);}
+.pill-purple{background:rgba(155,126,252,0.12);color:var(–accent2);}
+
+/* TREND */
+.trend-up-bad{color:var(–bad);font-size:11px;font-weight:600;}
+.trend-up-good{color:var(–good);font-size:11px;font-weight:600;}
+.trend-dn-good{color:var(–good);font-size:11px;font-weight:600;}
+.trend-dn-bad{color:var(–bad);font-size:11px;font-weight:600;}
+.trend-flat{color:var(–muted2);font-size:11px;font-weight:600;}
+
+/* SPARKLINE */
+.spark{display:inline-flex;align-items:flex-end;gap:2px;height:24px;vertical-align:middle;}
+.sb{width:4px;border-radius:1px 1px 0 0;min-height:3px;}
+
+/* MINI LABEL */
+.mlabel{font-size:10px;color:var(–muted);font-style:italic;}
+.recent{font-size:9px;background:rgba(91,140,245,0.2);color:var(–accent);border-radius:3px;padding:1px 5px;font-weight:700;vertical-align:middle;margin-left:4px;}
+.new{font-size:9px;background:rgba(34,211,165,0.15);color:var(–good);border-radius:3px;padding:1px 5px;font-weight:700;vertical-align:middle;margin-left:4px;}
+.flagged{font-size:9px;background:rgba(240,90,110,0.15);color:var(–bad);border-radius:3px;padding:1px 5px;font-weight:700;vertical-align:middle;margin-left:4px;}
+
+/* PROGRESS BAR */
+.pbar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.pbar-lbl{font-size:12px;width:130px;flex-shrink:0;text-align:right;color:var(–muted2);}
+.pbar-track{flex:1;background:rgba(255,255,255,0.06);border-radius:4px;height:7px;position:relative;}
+.pbar-fill{height:100%;border-radius:4px;position:absolute;}
+.pbar-val{font-size:12px;width:55px;flex-shrink:0;font-family:‘IBM Plex Mono’,monospace;font-size:11px;}
+
+/* PLAQUE VISUAL */
+.artery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.artery-box{background:var(–card2);border:1px solid var(–border2);border-radius:10px;padding:14px;text-align:center;}
+.artery-name{font-size:10px;color:var(–muted);font-weight:600;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;}
+.artery-pct{font-size:22px;font-weight:700;font-family:‘IBM Plex Mono’,monospace;}
+.artery-sub{font-size:10px;color:var(–muted2);margin-top:3px;}
+.artery-good{color:var(–good);}
+.artery-warn{color:var(–warn);}
+.artery-bad{color:var(–bad);}
+
+/* GENOME GRID */
+.gene-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.gene-item{background:var(–card2);border:1px solid var(–border2);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;}
+.gene-name{font-size:11px;font-weight:600;font-family:‘IBM Plex Mono’,monospace;}
+.gene-impact{font-size:10px;color:var(–muted2);margin-top:2px;}
+
+/* DEXA VIZ */
+.body-section{background:var(–card2);border:1px solid var(–border2);border-radius:10px;padding:14px;margin-bottom:8px;}
+.body-section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.body-section-name{font-size:11px;font-weight:600;color:var(–muted2);text-transform:uppercase;letter-spacing:0.6px;}
+
+/* QUESTION LIST */
+.q-list{list-style:none;}
+.q-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.04);align-items:flex-start;}
+.q-item:last-child{border-bottom:none;}
+.q-num{background:linear-gradient(135deg,var(–accent),var(–accent2));color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;}
+.q-num.urgent{background:linear-gradient(135deg,var(–bad),#c02040);}
+.q-num.cardio{background:linear-gradient(135deg,#f05a6e,#c83060);}
+.q-num.moderate{background:linear-gradient(135deg,var(–warn),#d48020);}
+.q-body{flex:1;}
+.q-text{font-size:13px;line-height:1.6;color:var(–text);}
+.q-cat{font-size:10px;color:var(–muted);margin-top:5px;display:flex;gap:8px;flex-wrap:wrap;}
+.q-tag{background:rgba(91,140,245,0.1);color:var(–accent);border-radius:4px;padding:1px 7px;font-weight:500;}
+.q-tag-red{background:rgba(240,90,110,0.1);color:var(–bad);border-radius:4px;padding:1px 7px;font-weight:500;}
+.q-tag-warn{background:rgba(245,185,66,0.1);color:var(–warn);border-radius:4px;padding:1px 7px;font-weight:500;}
+
+/* SUPPLEMENT TABLE */
+.supp-active{color:var(–good);}
+.supp-stopped{color:var(–bad);text-decoration:line-through;opacity:0.6;}
+.supp-review{color:var(–warn);}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:30px;}
+.timeline::before{content:’’;position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(–border2);}
+.tl-item{position:relative;margin-bottom:18px;}
+.tl-item::before{content:’’;position:absolute;left:-25px;top:4px;width:10px;height:10px;border-radius:50%;border:2px solid var(–accent);background:var(–bg);}
+.tl-item.good::before{border-color:var(–good);}
+.tl-item.warn::before{border-color:var(–warn);}
+.tl-item.bad::before{border-color:var(–bad);}
+.tl-date{font-size:10px;color:var(–muted);font-family:‘IBM Plex Mono’,monospace;margin-bottom:2px;}
+.tl-title{font-size:13px;font-weight:600;color:var(–text);}
+.tl-desc{font-size:12px;color:var(–muted2);margin-top:2px;line-height:1.5;}
+
+/* RISK METER */
+.risk-meter{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:10px 0;}
+.risk-seg{flex:1;}
+.risk-seg.good{background:var(–good);}
+.risk-seg.warn{background:var(–warn);}
+.risk-seg.bad{background:var(–bad);}
+.risk-marker{position:relative;height:10px;}
+
+/* WEIGHT TIMELINE */
+.wt-row{display:flex;align-items:center;gap:0;padding:16px 0;}
+.wt-pt{display:flex;flex-direction:column;align-items:center;flex:0 0 auto;width:90px;}
+.wt-val{font-size:18px;font-weight:700;font-family:‘IBM Plex Mono’,monospace;}
+.wt-yr{font-size:9px;color:var(–muted);margin-top:2px;text-align:center;line-height:1.4;}
+.wt-line{flex:1;height:2px;position:relative;top:-14px;}
+
+/* GUT TABLE */
+.gut-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.gut-name{font-size:11px;color:var(–muted2);width:200px;flex-shrink:0;}
+.gut-bar-track{flex:1;background:rgba(255,255,255,0.05);border-radius:3px;height:6px;position:relative;}
+.gut-fill{height:100%;border-radius:3px;position:absolute;}
+.gut-status{font-size:10px;width:40px;text-align:right;flex-shrink:0;}
+
+/* DIVIDER */
+hr.sec-div{border:none;border-top:1px solid var(–border);margin:20px 0;}
+
+/* OPPORTUNITY BOX */
+.opp-box{background:linear-gradient(135deg,rgba(91,140,245,0.06),rgba(155,126,252,0.06));border:1px solid rgba(91,140,245,0.2);border-radius:10px;padding:16px;}
+.opp-title{color:var(–accent);font-weight:600;font-size:12px;margin-bottom:8px;}
+.opp-list{list-style:none;}
+.opp-list li{font-size:12px;color:var(–muted2);padding:3px 0;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+.opp-list li::before{content:‘→’;color:var(–accent);flex-shrink:0;}
+
+/* INFO BOX */
+.info-box{background:rgba(56,196,224,0.05);border:1px solid rgba(56,196,224,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(–muted2);line-height:1.6;margin-bottom:12px;}
+.info-box strong{color:var(–text);}
+
+/* ANOMALY BADGE */
+.anomaly-tag{display:inline-block;background:rgba(240,90,110,0.1);color:var(–bad);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;margin:1px;}
+.watch-tag{display:inline-block;background:rgba(245,185,66,0.1);color:var(–warn);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;margin:1px;}
+.good-tag{display:inline-block;background:rgba(34,211,165,0.1);color:var(–good);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;margin:1px;}
+
+/* SCROLLABLE TABLE WRAPPER */
+.tbl-wrap{overflow-x:auto;}
+.tbl-wrap::-webkit-scrollbar{height:4px;}
+.tbl-wrap::-webkit-scrollbar-track{background:rgba(255,255,255,0.03);}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(–border2);border-radius:2px;}
+</style>
+
+</head>
+<body>
+
+<!-- HEADER -->
+
+<div class="header">
+  <div class="header-brand">
+    <div class="header-logo">❤️</div>
+    <div class="header-title">
+      <h1>Matt Dennis — Health Intelligence</h1>
+      <p>DOB: Jul 12, 1978 · Age 47 · Comprehensive longitudinal analysis 2016–2026</p>
+    </div>
+  </div>
+  <div class="header-meta">
+    <span class="meta-chip bad">⚠ CAC Score 297 (95th %ile)</span>
+    <span class="meta-chip warn">Lp(a) 171 nmol/L</span>
+    <span class="meta-chip">Last Lab: Mar 18, 2026</span>
+  </div>
+</div>
+
+<!-- NAV -->
+
+<div class="nav">
+  <button class="nav-btn active" onclick="showTab('overview',this)"><span class="nav-dot"></span>Overview</button>
+  <button class="nav-btn" onclick="showTab('cardiac',this)"><span class="nav-dot"></span>Cardiac &amp; Plaque</button>
+  <button class="nav-btn" onclick="showTab('lipids',this)"><span class="nav-dot"></span>Lipids &amp; Inflammation</button>
+  <button class="nav-btn" onclick="showTab('metabolic',this)"><span class="nav-dot"></span>Metabolic</button>
+  <button class="nav-btn" onclick="showTab('blood',this)"><span class="nav-dot"></span>Blood &amp; Immune</button>
+  <button class="nav-btn" onclick="showTab('hormones',this)"><span class="nav-dot"></span>Hormones &amp; Thyroid</button>
+  <button class="nav-btn" onclick="showTab('vitamins',this)"><span class="nav-dot"></span>Vitamins &amp; Minerals</button>
+  <button class="nav-btn" onclick="showTab('dexa',this)"><span class="nav-dot"></span>Body Composition</button>
+  <button class="nav-btn" onclick="showTab('genetics',this)"><span class="nav-dot"></span>Genetics &amp; Gut</button>
+  <button class="nav-btn" onclick="showTab('supplements',this)"><span class="nav-dot"></span>Supplements</button>
+  <button class="nav-btn" onclick="showTab('questions',this)"><span class="nav-dot"></span>Doctor Questions</button>
+</div>
+
+<div class="content">
+
+<!-- ═══════════════ OVERVIEW ═══════════════ -->
+
+<div class="section active" id="overview">
+  <div class="sec-head">
+    <h2>Health Overview</h2>
+    <div class="sec-head-badges">
+      <span class="badge-bad" style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;">3 Critical Flags</span>
+      <span class="badge-warn" style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;">6 Watch Items</span>
+      <span class="badge-good" style="padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;">12+ Excellent Trends</span>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card bad">
+      <div class="stat-label">CAC Score</div>
+      <div class="stat-value">297</div>
+      <div class="stat-sub">95–100th %ile for age/sex</div>
+    </div>
+    <div class="stat-card bad">
+      <div class="stat-label">Lp(a)</div>
+      <div class="stat-value">171 <span style="font-size:14px">nmol/L</span></div>
+      <div class="stat-sub">Goal &lt;75 · Genetically elevated</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-label">LDL Particles</div>
+      <div class="stat-value">1,054</div>
+      <div class="stat-sub">Goal &lt;935 · Still elevated</div>
+    </div>
+    <div class="stat-card good">
+      <div class="stat-label">LDL Cholesterol</div>
+      <div class="stat-value">51</div>
+      <div class="stat-sub">↓ from 149 in 2021 · Excellent</div>
+    </div>
+    <div class="stat-card good">
+      <div class="stat-label">HbA1c</div>
+      <div class="stat-value">4.8<span style="font-size:14px">%</span></div>
+      <div class="stat-sub">Optimal · No diabetes risk</div>
+    </div>
+    <div class="stat-card good">
+      <div class="stat-label">Vitamin D</div>
+      <div class="stat-value">63</div>
+      <div class="stat-sub">↑ from 34 last year</div>
+    </div>
+    <div class="stat-card warn">
+      <div class="stat-label">Testosterone Total</div>
+      <div class="stat-value">445</div>
+      <div class="stat-sub">↓ from 568 · Low-normal trend</div>
+    </div>
+    <div class="stat-card neutral">
+      <div class="stat-label">Weight</div>
+      <div class="stat-value">218 <span style="font-size:14px">lbs</span></div>
+      <div class="stat-sub">↓ 68 lbs from 2016 peak (286)</div>
+    </div>
+  </div>
+
+  <!-- Critical Alerts -->
+
+  <div class="grid-2-1" style="margin-bottom:20px;">
+    <div>
+      <div class="card">
+        <div class="card-title">Critical Findings — Action Required <span class="card-title-badge badge-bad">3 Items</span></div>
+        <div class="alert alert-bad">
+          <div class="alert-title">🔴 CAC Score 297 — 95th Percentile (Dec 2023)</div>
+          Your coronary calcium score places you in the top 5% of cardiovascular risk for your age and sex. This is a direct measurement of calcified plaque in your arteries. Combined with the Cleerly CTA finding of Stage 2 Atherosclerosis (240.6 mm³ total plaque across RCA, LAD, and Cx), this is your most urgent health priority. The LAD lesion (24% stenosis at pLAD) spans from the Left Main — this coronary territory supplies a large portion of your heart muscle.
+        </div>
+        <div class="alert alert-bad">
+          <div class="alert-title">🔴 Lp(a) = 171 nmol/L — Persistently &gt;2× Upper Limit</div>
+          Elevated since first measured (56 mg/dL in 2017, converting to ~150+ nmol/L). Lp(a) is ~90% genetically determined and raises atherosclerosis risk <em>independently</em> of LDL. No diet or exercise fixes this. Pharmaceutical intervention is indicated. New Lp(a)-lowering agents (Pelacarsen, Olpasiran) are in late-stage trials. PCSK9 inhibitors reduce Lp(a) ~20–30%. This combined with your CAC score warrants urgent cardiology discussion.
+        </div>
+        <div class="alert alert-bad">
+          <div class="alert-title">🔴 Lung Nodule Found on Jan 2024 CT — Status Unknown</div>
+          The Jan 24, 2024 CTA report noted a tiny noncalcified nodule in the posterior left lower lobe with mixed consolidative/groundglass opacity (also right lower lobe groundglass). Report indicated follow-up may be warranted. <strong>It's unclear from records whether follow-up imaging was done.</strong> Given your cardiovascular risk profile and genetics (oxidative stress very high per 3X4), this needs to be confirmed resolved or tracked.
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">Your Health Journey <span class="card-title-badge badge-good">Remarkable Progress</span></div>
+        <div class="timeline">
+          <div class="tl-item warn">
+            <div class="tl-date">2016 — Peak Weight</div>
+            <div class="tl-title">296 lbs · Started C-PAP</div>
+            <div class="tl-desc">Highest weight recorded. Sleep apnea diagnosed. Cholesterol 245, LDL 149</div>
+          </div>
+          <div class="tl-item good">
+            <div class="tl-date">Oct 2016 — Plant-Based Diet</div>
+            <div class="tl-title">Began whole food transformation</div>
+            <div class="tl-desc">Down to 269 lbs. Metabolic improvement begins</div>
+          </div>
+          <div class="tl-item good">
+            <div class="tl-date">Oct 2019 — Peloton</div>
+            <div class="tl-title">Added consistent cardio</div>
+            <div class="tl-desc">Weight dropped to 235. Vitamin D improved to 62</div>
+          </div>
+          <div class="tl-item good">
+            <div class="tl-date">2022 — Weightlifting</div>
+            <div class="tl-title">Strength training added</div>
+            <div class="tl-desc">Muscle index at 90th percentile on DEXA</div>
+          </div>
+          <div class="tl-item warn">
+            <div class="tl-date">Dec 2023 — CAC Scan</div>
+            <div class="tl-title">Score: 297 (95th percentile)</div>
+            <div class="tl-desc">Significant atherosclerotic burden found despite lifestyle improvements</div>
+          </div>
+          <div class="tl-item neutral">
+            <div class="tl-date">Mar 2025 — GLP-1 Started</div>
+            <div class="tl-title">Semaglutide 2.5mg/week</div>
+            <div class="tl-desc">Weight stabilizing at 218. GI adaptation ongoing</div>
+          </div>
+          <div class="tl-item good">
+            <div class="tl-date">Mar 2026 — Latest Labs</div>
+            <div class="tl-title">LDL 51, A1C 4.8%, D 63</div>
+            <div class="tl-desc">Exceptional metabolic markers despite high Lp(a)/CAC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weight Journey -->
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">Weight Trajectory 2014–2026 <span class="card-title-badge badge-good">−78 lbs from peak</span></div>
+    <div class="wt-row">
+      <div class="wt-pt"><div class="wt-val" style="color:var(--bad)">296</div><div class="wt-yr">Sep 2016<br>Peak</div></div>
+      <div class="wt-line" style="background:linear-gradient(90deg,var(--bad),var(--warn))"></div>
+      <div class="wt-pt"><div class="wt-val" style="color:var(--warn)">235</div><div class="wt-yr">Feb 2020<br>Peloton era</div></div>
+      <div class="wt-line" style="background:linear-gradient(90deg,var(--warn),#5b8cf5)"></div>
+      <div class="wt-pt"><div class="wt-val" style="color:var(--accent)">203</div><div class="wt-yr">Mar 2021<br>All-time low</div></div>
+      <div class="wt-line" style="background:linear-gradient(90deg,var(--accent),var(--warn))"></div>
+      <div class="wt-pt"><div class="wt-val" style="color:var(--warn)">232</div><div class="wt-yr">2023–24<br>Plateau</div></div>
+      <div class="wt-line" style="background:linear-gradient(90deg,var(--warn),var(--good))"></div>
+      <div class="wt-pt"><div class="wt-val" style="color:var(--good)">218</div><div class="wt-yr">Mar 2026<br>GLP-1 phase</div></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+      <span class="good-tag">C-PAP Mar 2016</span>
+      <span class="good-tag">Plant-Based Diet Oct 2016</span>
+      <span class="good-tag">Peloton Oct 2019</span>
+      <span class="good-tag">Weightlifting 2022</span>
+      <span class="watch-tag">GLP-1 Started Mar 2025</span>
+    </div>
+  </div>
+
+  <!-- Wins vs Concerns Grid -->
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">✅ Standout Improvements <span class="card-title-badge badge-good">Excellent</span></div>
+      <table class="htable">
+        <thead><tr><th>Marker</th><th>Then</th><th>Now</th><th>Change</th></tr></thead>
+        <tbody>
+          <tr><td>LDL Cholesterol</td><td style="color:var(--bad)">149 (2021)</td><td style="color:var(--good)">51</td><td><span class="trend-dn-good">↓ 66%</span></td></tr>
+          <tr><td>Total Cholesterol</td><td style="color:var(--bad)">245 (2021)</td><td style="color:var(--good)">129</td><td><span class="trend-dn-good">↓ 47%</span></td></tr>
+          <tr><td>Triglycerides</td><td style="color:var(--warn)">190 (2022)</td><td style="color:var(--good)">102</td><td><span class="trend-dn-good">↓ 46%</span></td></tr>
+          <tr><td>LP PLA2 (plaque inflam)</td><td style="color:var(--bad)">157 (2023)</td><td style="color:var(--good)">97</td><td><span class="trend-dn-good">↓ 38%</span></td></tr>
+          <tr><td>ApoB</td><td style="color:var(--bad)">117 (2022)</td><td style="color:var(--good)">59</td><td><span class="trend-dn-good">↓ 50%</span></td></tr>
+          <tr><td>Vitamin D</td><td style="color:var(--warn)">34 (2024)</td><td style="color:var(--good)">63</td><td><span class="trend-up-good">↑ 85%</span></td></tr>
+          <tr><td>TOT/HDL Ratio</td><td style="color:var(--warn)">4.1 (2021)</td><td style="color:var(--good)">2.2</td><td><span class="trend-dn-good">↓ 46%</span></td></tr>
+          <tr><td>TMAO (gut health)</td><td style="color:var(--warn)">4.8 (2024)</td><td style="color:var(--good)">3.2</td><td><span class="trend-dn-good">↓ 33%</span></td></tr>
+          <tr><td>Weight</td><td style="color:var(--bad)">286 (2016)</td><td style="color:var(--good)">218</td><td><span class="trend-dn-good">↓ 68 lbs</span></td></tr>
+          <tr><td>Insulin</td><td style="color:var(--warn)">10.1 (2024)</td><td style="color:var(--good)">3.5</td><td><span class="trend-dn-good">↓ 65%</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">⚠ Ongoing Watch Items <span class="card-title-badge badge-warn">Monitor</span></div>
+      <table class="htable">
+        <thead><tr><th>Marker</th><th>Latest</th><th>Goal</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>CAC Score</td><td style="color:var(--bad)">297</td><td>&lt;100</td><td><span class="pill pill-bad">Critical</span></td></tr>
+          <tr><td>Lp(a)</td><td style="color:var(--bad)">171 nmol/L</td><td>&lt;75</td><td><span class="pill pill-bad">Critical</span></td></tr>
+          <tr><td>LDL Particles</td><td style="color:var(--warn)">1,054</td><td>&lt;935</td><td><span class="pill pill-warn">Elevated</span></td></tr>
+          <tr><td>AA/EPA Ratio</td><td style="color:var(--warn)">8.5</td><td>&lt;3.7</td><td><span class="pill pill-warn">Worsened</span></td></tr>
+          <tr><td>Testosterone Total</td><td style="color:var(--warn)">445</td><td>500+</td><td><span class="pill pill-warn">Declining</span></td></tr>
+          <tr><td>Reverse T3</td><td style="color:var(--warn)">19</td><td>&lt;15</td><td><span class="pill pill-warn">High-Normal</span></td></tr>
+          <tr><td>Bilirubin</td><td style="color:var(--warn)">1.5</td><td>&lt;1.2</td><td><span class="pill pill-warn">Above Range</span></td></tr>
+          <tr><td>WBC</td><td style="color:var(--warn)">3.8</td><td>4–10</td><td><span class="pill pill-warn">Chronically Low</span></td></tr>
+          <tr><td>F2-Isoprostane</td><td style="color:var(--warn)">0.45</td><td>—</td><td><span class="pill pill-warn">↑ Oxidative stress</span></td></tr>
+          <tr><td>Lung Nodule</td><td style="color:var(--bad)">Found Jan 2024</td><td>Resolved?</td><td><span class="pill pill-bad">Unconfirmed</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ CARDIAC & PLAQUE ═══════════════ -->
+
+<div class="section" id="cardiac">
+  <div class="sec-head">
+    <h2>Cardiac &amp; Plaque Assessment</h2>
+    <div class="sec-head-badges">
+      <span class="badge-bad">CAC 297 · 95th %ile</span>
+      <span class="badge-warn">Stage 2 Atherosclerosis</span>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>Why this matters:</strong> Three separate cardiac imaging studies give us an unusually detailed picture of your heart health. The CAC score measures hardened (calcified) plaque — a sign plaque has been building for years. The Cleerly CTA provides a 3D map of all plaque types including dangerous soft (non-calcified) plaque. Together, these explain why aggressive treatment of Lp(a) and LDL particles is warranted even with an excellent standard LDL of 51.
+  </div>
+
+  <div class="grid-2" style="margin-bottom:18px;">
+    <div class="card">
+      <div class="card-title">CT Calcium Score — Dec 2023</div>
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:72px;font-weight:700;color:var(--bad);font-family:'IBM Plex Mono',monospace;line-height:1;">297</div>
+        <div style="color:var(--bad);font-weight:600;margin-top:8px;">95th–100th Percentile for Age &amp; Sex</div>
+        <div style="color:var(--muted2);font-size:12px;margin-top:6px;">Aggressive treatment warranted</div>
+      </div>
+      <div style="background:var(--card2);border-radius:8px;padding:14px;margin-top:8px;">
+        <div style="font-size:11px;color:var(--muted2);margin-bottom:10px;">CAC Risk Categories (47yo Male)</div>
+        <div class="pbar-row">
+          <div class="pbar-lbl">Zero (0)</div>
+          <div class="pbar-track"><div class="pbar-fill" style="width:10%;background:var(--good)"></div></div>
+          <div class="pbar-val" style="color:var(--good)">Low Risk</div>
+        </div>
+        <div class="pbar-row">
+          <div class="pbar-lbl">1–99</div>
+          <div class="pbar-track"><div class="pbar-fill" style="width:40%;background:var(--warn)"></div></div>
+          <div class="pbar-val" style="color:var(--warn)">Moderate</div>
+        </div>
+        <div class="pbar-row">
+          <div class="pbar-lbl">100–299</div>
+          <div class="pbar-track"><div class="pbar-fill" style="width:75%;background:var(--bad)"></div></div>
+          <div class="pbar-val" style="color:var(--bad)">High</div>
+        </div>
+        <div class="pbar-row">
+          <div class="pbar-lbl" style="color:var(--bad);font-weight:600;">YOU → 297</div>
+          <div class="pbar-track"><div class="pbar-fill" style="width:74%;background:var(--bad)"></div></div>
+          <div class="pbar-val" style="color:var(--bad)">95th %ile</div>
+        </div>
+        <div class="pbar-row">
+          <div class="pbar-lbl">300+</div>
+          <div class="pbar-track"><div class="pbar-fill" style="width:100%;background:#8b0000)"></div></div>
+          <div class="pbar-val" style="color:var(--bad)">Very High</div>
+        </div>
+      </div>
+      <div class="alert alert-warn" style="margin-top:12px;">
+        <div class="alert-title">⚠️ Lung Nodule — Follow-Up Status?</div>
+        The Dec 2023 CT also noted a tiny noncalcified lung nodule. The Jan 2024 CTA confirmed groundglass opacities in the left lower lobe. Guideline says optional CT at 12 months if high-risk. <strong>Has follow-up been done? If not, this needs to be confirmed.</strong>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Cleerly CTA Plaque Map — Jan 24, 2024</div>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:13px;font-weight:600;">Total Plaque Volume</span>
+          <span style="font-size:20px;font-weight:700;color:var(--warn);font-family:'IBM Plex Mono',monospace;">240.6 mm³</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted2);margin-bottom:12px;">Atherosclerosis Stage 2 · Right Dominant · 11 minimal stenoses</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+          <div style="flex:1;background:rgba(34,211,165,0.1);border:1px solid rgba(34,211,165,0.3);border-radius:8px;padding:10px;text-align:center;">
+            <div style="font-size:16px;font-weight:700;color:var(--good);font-family:'IBM Plex Mono',monospace;">0 mm³</div>
+            <div style="font-size:10px;color:var(--muted2);margin-top:2px;">Low-Density<br>(dangerous soft)</div>
+          </div>
+          <div style="flex:1;background:rgba(245,185,66,0.1);border:1px solid rgba(245,185,66,0.3);border-radius:8px;padding:10px;text-align:center;">
+            <div style="font-size:16px;font-weight:700;color:var(--warn);font-family:'IBM Plex Mono',monospace;">149.5 mm³</div>
+            <div style="font-size:10px;color:var(--muted2);margin-top:2px;">Non-Calcified<br>(soft plaque)</div>
+          </div>
+          <div style="flex:1;background:rgba(91,140,245,0.1);border:1px solid rgba(91,140,245,0.3);border-radius:8px;padding:10px;text-align:center;">
+            <div style="font-size:16px;font-weight:700;color:var(--accent);font-family:'IBM Plex Mono',monospace;">91.1 mm³</div>
+            <div style="font-size:10px;color:var(--muted2);margin-top:2px;">Calcified<br>(stable plaque)</div>
+          </div>
+        </div>
+      </div>
+      <div class="artery-grid">
+        <div class="artery-box">
+          <div class="artery-name">LM + LAD</div>
+          <div class="artery-pct artery-warn">24%</div>
+          <div class="artery-sub">Max stenosis at pLAD<br>136.9 mm³ total</div>
+        </div>
+        <div class="artery-box">
+          <div class="artery-name">RCA</div>
+          <div class="artery-pct artery-warn">12%</div>
+          <div class="artery-sub">81.8 mm³ total<br>3.9% atheroma</div>
+        </div>
+        <div class="artery-box">
+          <div class="artery-name">Cx / OM1</div>
+          <div class="artery-pct artery-warn">12%</div>
+          <div class="artery-sub">21.9 mm³ total<br>4.5% atheroma</div>
+        </div>
+        <div class="artery-box" style="grid-column:span 3;">
+          <div class="artery-name">Key Finding — LM to LAD Lesion</div>
+          <div style="font-size:12px;color:var(--muted2);line-height:1.6;margin-top:6px;">A single lesion spans Left Main (16%), proximal LAD (24%), proximal Cx (10%), and LCx (4%). This is minimal stenosis territory but the location — supplying a large portion of the heart — makes ongoing monitoring critical. <strong style="color:var(--warn)">ZERO low-density (vulnerable) plaque is a positive finding.</strong> All plaque is non-calcified or calcified, not the rupture-prone soft type.</div>
+        </div>
+      </div>
+      <div class="alert alert-good" style="margin-top:12px;">
+        <div class="alert-title">✅ No High-Risk (Low-Density) Plaque</div>
+        Zero mm³ of low-density non-calcified plaque found — this is the dangerous, rupture-prone type. Your plaque is predominantly non-calcified stable and calcified stable. This is the key reason your risk, while elevated, may be manageable with current medications.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cardiovascular Risk Context — Your Unique Profile</div>
+    <div class="grid-3">
+      <div class="alert alert-bad" style="margin-bottom:0;">
+        <div class="alert-title">🔴 Genetic Risk (Lp(a))</div>
+        Lp(a) has been elevated since first measurement. It was 56 mg/dL in 2017, rose to 85 (2021), and is now 171 nmol/L. This genetic trait drove early plaque formation even before your lifestyle improvements took effect. Your CAC score likely reflects plaque that accumulated when LDL was also 120–149.
+      </div>
+      <div class="alert alert-good" style="margin-bottom:0;">
+        <div class="alert-title">✅ Medications Are Working on LDL</div>
+        Rosuvastatin + Ezetimibe have driven LDL from 149→51, ApoB from 117→59, and LP PLA2 from 157→97. This aggressive lipid control should slow further plaque progression. The question is: is it enough given Lp(a) 171 nmol/L?
+      </div>
+      <div class="alert alert-warn" style="margin-bottom:0;">
+        <div class="alert-title">⚠️ What Needs to Change</div>
+        1. Lp(a)-specific treatment (PCSK9i reduces it 20–30%)<br>
+        2. Repeat CAC or Cleerly CTA to track progression<br>
+        3. Confirm lung nodule follow-up status<br>
+        4. Consider aspirin or anti-platelet therapy discussion<br>
+        5. AA/EPA ratio (8.5) driving residual inflammation
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ LIPIDS ═══════════════ -->
+
+<div class="section" id="lipids">
+  <div class="sec-head">
+    <h2>Lipids, Omega-3 &amp; Inflammation</h2>
+    <div class="sec-head-badges">
+      <span class="badge-good">Standard Lipids Excellent</span>
+      <span class="badge-bad">Lp(a) Critical</span>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>Key Insight:</strong> Your standard LDL and total cholesterol look excellent on paper, but three advanced markers tell a more nuanced story: elevated LDL particle count (1,054), persistent Lp(a) (171 nmol/L), and LDL Pattern B — all of which increase cardiovascular risk beyond what the standard LDL number suggests.
+  </div>
+
+  <div class="tbl-wrap" style="margin-bottom:20px;">
+    <table class="htable" style="background:var(--card);border-radius:12px;border:1px solid var(--border);">
+      <thead>
+        <tr>
+          <th style="width:170px;">Marker</th>
+          <th>What It Means</th>
+          <th>Goal</th>
+          <th>2020</th>
+          <th>2021</th>
+          <th>2022</th>
+          <th>2023</th>
+          <th>2024</th>
+          <th>2025–26</th>
+          <th>Latest</th>
+          <th>Status</th>
+          <th>Trend</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><b>Triglycerides</b></td><td class="mlabel">Blood fat — diet/sugar</td><td style="color:var(--muted)">&lt;150</td><td>170</td><td>180</td><td>190</td><td>129</td><td>102</td><td>101</td><td><b>102</b></td><td><span class="pill pill-good">✓ Normal</span></td><td><span class="trend-dn-good">↓↓ Excellent</span></td></tr>
+        <tr><td><b>Total Cholesterol</b></td><td class="mlabel">All cholesterol combined</td><td style="color:var(--muted)">&lt;200</td><td>195</td><td>245</td><td>202</td><td>216</td><td>138</td><td>131</td><td><b>129</b></td><td><span class="pill pill-good">✓ Excellent</span></td><td><span class="trend-dn-good">↓↓ Major drop</span></td></tr>
+        <tr><td><b>HDL (Good)</b></td><td class="mlabel">Protective — higher better</td><td style="color:var(--muted)">&gt;40</td><td>41</td><td>60</td><td>52</td><td>58</td><td>63</td><td>58</td><td><b>60</b></td><td><span class="pill pill-good">✓ Healthy</span></td><td><span class="trend-flat">→ Stable</span></td></tr>
+        <tr><td><b>LDL (Bad)</b></td><td class="mlabel">Lower is better</td><td style="color:var(--muted)">&lt;100</td><td>120</td><td>149</td><td>112</td><td>140</td><td>58</td><td>63</td><td><b>51</b></td><td><span class="pill pill-good">✓ Excellent</span></td><td><span class="trend-dn-good">↓↓ On meds</span></td></tr>
+        <tr><td><b>Non-HDL Chol</b></td><td class="mlabel">LDL+VLDL combined</td><td style="color:var(--muted)">&lt;130</td><td>—</td><td>—</td><td>—</td><td>160</td><td>76</td><td>83</td><td><b>69</b></td><td><span class="pill pill-good">✓ Good</span></td><td><span class="trend-dn-good">↓ Improving</span></td></tr>
+        <tr style="background:rgba(240,90,110,0.04)"><td><b>Lipoprotein(a)</b></td><td class="mlabel">Genetic, can't diet away</td><td style="color:var(--muted)">&lt;75 nmol/L</td><td>66</td><td>85</td><td>54</td><td>—</td><td>135</td><td>171</td><td><b>171 <span class="flagged">CRITICAL</span></b></td><td><span class="pill pill-bad">✗ Critical</span></td><td><span class="trend-up-bad">↑ No improvement</span></td></tr>
+        <tr style="background:rgba(245,185,66,0.03)"><td><b>LDL Particles</b></td><td class="mlabel">Real count of LDL particles</td><td style="color:var(--muted)">&lt;935</td><td>1,631</td><td>—</td><td>1,604</td><td>2,064</td><td>1,041</td><td>1,111</td><td><b>1,054 <span class="watch-tag">WATCH</span></b></td><td><span class="pill pill-warn">⚠ High</span></td><td><span class="trend-dn-good">↓ Improving slowly</span></td></tr>
+        <tr><td><b>LDL Pattern</b></td><td class="mlabel">Pattern B = small dense LDL</td><td style="color:var(--muted)">Pattern A</td><td>—</td><td>—</td><td>B</td><td>B</td><td>—</td><td>B</td><td><b>B <span class="watch-tag">WATCH</span></b></td><td><span class="pill pill-warn">⚠ Pattern B</span></td><td><span class="trend-flat">→ Unchanged</span></td></tr>
+        <tr><td><b>ApolipoproteinB</b></td><td class="mlabel">All bad particle count</td><td style="color:var(--muted)">&lt;90</td><td>—</td><td>—</td><td>117</td><td>104</td><td>56</td><td>65</td><td><b>59</b></td><td><span class="pill pill-good">✓ Good</span></td><td><span class="trend-dn-good">↓ Excellent</span></td></tr>
+        <tr><td><b>TOT/HDL Ratio</b></td><td class="mlabel">Overall risk ratio</td><td style="color:var(--muted)">&lt;4.9</td><td>4.8</td><td>4.1</td><td>3.9</td><td>3.5</td><td>2.2</td><td>2.4</td><td><b>2.2</b></td><td><span class="pill pill-good">✓ Excellent</span></td><td><span class="trend-dn-good">↓↓ Best ever</span></td></tr>
+        <tr><td><b>LP PLA2</b></td><td class="mlabel">Inflammation inside plaque</td><td style="color:var(--muted)">&lt;123</td><td>—</td><td>—</td><td>157</td><td>157</td><td>122</td><td>108</td><td><b>97</b></td><td><span class="pill pill-good">✓ Now Normal</span></td><td><span class="trend-dn-good">↓↓ Major drop</span></td></tr>
+        <tr><td><b>HS-CRP</b></td><td class="mlabel">Systemic inflammation</td><td style="color:var(--muted)">&lt;1.0</td><td>—</td><td>—</td><td>—</td><td>1.0</td><td>—</td><td>0.9</td><td><b>0.6</b></td><td><span class="pill pill-good">✓ Low Risk</span></td><td><span class="trend-dn-good">↓ Improved</span></td></tr>
+        <tr><td><b>OxLDL</b></td><td class="mlabel">Oxidized LDL — damage</td><td style="color:var(--muted)">&lt;60</td><td>63</td><td>—</td><td>52</td><td>—</td><td>54</td><td>—</td><td><b>54 (2024)</b></td><td><span class="pill pill-warn">⚠ Borderline</span></td><td><span class="trend-flat">→ Stable</span></td></tr>
+        <tr><td><b>F2-Isoprostane</b></td><td class="mlabel">Oxidative stress marker</td><td style="color:var(--muted)">—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>0.29</td><td>—</td><td><b>0.45 <span class="watch-tag">↑</span></b></td><td><span class="pill pill-warn">⚠ Rising</span></td><td><span class="trend-up-bad">↑ Worsening</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Omega-3 Profile <span class="card-title-badge badge-warn">AA/EPA Ratio Worsened</span></div>
+      <table class="htable">
+        <thead><tr><th>Marker</th><th>Goal</th><th>2024</th><th>Latest</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>EPA+DPA+DHA total</b></td><td style="color:var(--muted)">&gt;5.4%</td><td>7.2</td><td><b>6.5</b></td><td><span class="pill pill-good">✓ Good</span></td></tr>
+          <tr><td><b>Omega-6/Omega-3 Ratio</b></td><td style="color:var(--muted)">&lt;3.7</td><td>5.0</td><td><b>5.0</b></td><td><span class="pill pill-warn">⚠ High</span></td></tr>
+          <tr style="background:rgba(240,90,110,0.04)"><td><b>AA/EPA Ratio</b></td><td style="color:var(--muted)">&lt;3.7</td><td>4.5</td><td><b>8.5</b></td><td><span class="pill pill-bad">✗ Doubled</span></td></tr>
+          <tr><td><b>DHA</b></td><td style="color:var(--muted)">&gt;1.4%</td><td>3.7</td><td><b>3.6</b></td><td><span class="pill pill-good">✓ Good</span></td></tr>
+          <tr><td><b>Arachidonic Acid</b></td><td style="color:var(--muted)">&lt;15.6%</td><td>9.0</td><td><b>11.4</b></td><td><span class="pill pill-warn">⚠ Rising</span></td></tr>
+          <tr><td><b>TMAO</b></td><td style="color:var(--muted)">&lt;6.2</td><td>4.8</td><td><b>3.2</b></td><td><span class="pill pill-good">✓ Improved</span></td></tr>
+        </tbody>
+      </table>
+      <div class="alert alert-bad" style="margin-top:12px;">
+        <div class="alert-title">🔴 AA/EPA Ratio Doubled to 8.5</div>
+        This ratio jumped from 4.5 → 8.5 despite 3 omega-3 capsules daily. A high AA/EPA ratio means more arachidonic acid (pro-inflammatory) relative to EPA (anti-inflammatory). This drives residual cardiovascular inflammation even as standard markers improve. Consider: (1) dedicated EPA-only supplement (Vascepa), (2) dietary reduction of omega-6 sources (vegetable oils, processed foods).
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">LDL Deep Dive — Particle Analysis</div>
+        <div class="info-box" style="margin-bottom:12px;"><strong>Plain English:</strong> Standard LDL measures cholesterol carried in particles. Particle count measures the actual number of particles — which matters more for risk. Pattern B means your particles are small and dense, more likely to penetrate artery walls.</div>
+        <table class="htable">
+          <thead><tr><th>Metric</th><th>2022</th><th>2023</th><th>2024</th><th>Latest</th></tr></thead>
+          <tbody>
+            <tr><td>LDL Particles (total)</td><td>1,604</td><td>2,064</td><td>1,041</td><td><b>1,054</b></td></tr>
+            <tr><td>Small LDL Particles</td><td>—</td><td>410</td><td>503</td><td><b>—</b></td></tr>
+            <tr><td>LDL Small (absolute)</td><td>439</td><td>—</td><td>—</td><td><b>177</b></td></tr>
+            <tr><td>LDL Medium</td><td>372</td><td>606</td><td>—</td><td><b>164</b></td></tr>
+            <tr><td>LDL Peak Size</td><td>212.1</td><td>216.8</td><td>—</td><td><b>216.4</b></td></tr>
+            <tr><td>Pattern</td><td>B</td><td>B</td><td>—</td><td><b>B</b></td></tr>
+          </tbody>
+        </table>
+        <div class="opp-box" style="margin-top:12px;">
+          <div class="opp-title">Opportunity: Getting Particles Below 935</div>
+          <ul class="opp-list">
+            <li>PCSK9 inhibitor (Repatha) would lower LDL-P by 50–60% AND reduce Lp(a) 20–30%</li>
+            <li>Bempedoic acid (Nexletol) reduces LDL-P without myopathy risk</li>
+            <li>Increasing EPA may improve particle size toward Pattern A</li>
+            <li>Niacin was historically effective but fell out of favor due to side effects</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ METABOLIC ═══════════════ -->
+
+<div class="section" id="metabolic">
+  <div class="sec-head">
+    <h2>Metabolic Health</h2>
+    <div class="sec-head-badges">
+      <span class="badge-good">Blood Sugar — Outstanding</span>
+      <span class="badge-warn">Bilirubin elevated</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">Blood Sugar &amp; Insulin Resistance <span class="card-title-badge badge-good">Excellent</span></div>
+        <table class="htable">
+          <thead><tr><th>Marker</th><th>Goal</th><th>2022</th><th>2023</th><th>2024</th><th>Latest</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><b>Glucose</b></td><td style="color:var(--muted)">70–100</td><td>97</td><td>97</td><td>104</td><td><b>83</b></td><td><span class="pill pill-good">✓ Excellent</span></td></tr>
+            <tr><td><b>HbA1c</b></td><td style="color:var(--muted)">&lt;5.7%</td><td>4.7</td><td>4.9</td><td>—</td><td><b>4.8%</b></td><td><span class="pill pill-good">✓ Optimal</span></td></tr>
+            <tr><td><b>Insulin, Random</b></td><td style="color:var(--muted)">&lt;18.4</td><td>4.5</td><td>7.1</td><td>10.1</td><td><b>3.5</b></td><td><span class="pill pill-good">✓ Low</span></td></tr>
+            <tr><td><b>Adiponectin</b></td><td style="color:var(--muted)">Higher=better</td><td>—</td><td>—</td><td>2.1</td><td><b>3.7</b></td><td><span class="pill pill-good">✓ Improving</span></td></tr>
+            <tr><td><b>Leptin</b></td><td style="color:var(--muted)">1.8–19.9</td><td>3.6</td><td>3.0</td><td>—</td><td><b>1.5</b></td><td><span class="pill pill-warn">⚠ Low-end</span></td></tr>
+            <tr><td><b>Est Avg Glucose</b></td><td style="color:var(--muted)">55–110</td><td>—</td><td>—</td><td>—</td><td><b>88 (2020)</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+          </tbody>
+        </table>
+        <div class="alert alert-good" style="margin-top:12px;">
+          <div class="alert-title">✅ Extraordinary Metabolic Control</div>
+          A1C of 4.8% places you in the optimal zone well below pre-diabetes (5.7%). Insulin at 3.5 is very low — excellent sensitivity. Adiponectin improvement from 2.1→3.7 indicates better insulin sensitivity. Genetics testing showed "Very High" glucose/insulin pathway risk — you are clearly managing this effectively through diet and GLP-1. <strong>Statin-induced A1C elevation risk: currently no signal.</strong>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">Kidney Function <span class="card-title-badge badge-good">Healthy</span></div>
+        <table class="htable">
+          <thead><tr><th>Marker</th><th>Goal</th><th>2021</th><th>2023</th><th>2024</th><th>Latest</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><b>eGFR</b></td><td style="color:var(--muted)">&gt;60</td><td>89</td><td>109</td><td>77</td><td><b>85</b></td><td><span class="pill pill-good">✓ Good</span></td></tr>
+            <tr><td><b>Creatinine</b></td><td style="color:var(--muted)">0.64–1.27</td><td>0.93</td><td>0.86</td><td>1.18</td><td><b>1.08</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+            <tr><td><b>BUN</b></td><td style="color:var(--muted)">6–23</td><td>16</td><td>16</td><td>20</td><td><b>20</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+            <tr><td><b>Uric Acid</b></td><td style="color:var(--muted)">4–8</td><td>—</td><td>5.3</td><td>—</td><td><b>6.5</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+            <tr><td><b>Calcium</b></td><td style="color:var(--muted)">8.5–10.1</td><td>9.5</td><td>9.6</td><td>9.9</td><td><b>9.8</b></td><td><span class="pill pill-good">✓ Stable</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">Liver Function <span class="card-title-badge badge-warn">Bilirubin Elevated</span></div>
+        <table class="htable">
+          <thead><tr><th>Marker</th><th>Goal</th><th>2022</th><th>2024</th><th>Latest</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><b>AST</b></td><td style="color:var(--muted)">15–41</td><td>21</td><td>26</td><td><b>27</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+            <tr><td><b>ALT</b></td><td style="color:var(--muted)">10–63</td><td>26</td><td>35</td><td><b>37</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+            <tr><td><b>GGT</b></td><td style="color:var(--muted)">9–64</td><td>16</td><td>17</td><td><b>13</b></td><td><span class="pill pill-good">✓ Low</span></td></tr>
+            <tr style="background:rgba(245,185,66,0.04)"><td><b>Bilirubin</b></td><td style="color:var(--muted)">0.2–1.2</td><td>0.6</td><td>0.7</td><td><b>1.5 <span class="watch-tag">HIGH</span></b></td><td><span class="pill pill-warn">⚠ Above range</span></td></tr>
+            <tr><td><b>Albumin</b></td><td style="color:var(--muted)">3.2–4.8</td><td>4.3</td><td>4.6</td><td><b>4.8</b></td><td><span class="pill pill-good">✓ Good</span></td></tr>
+          </tbody>
+        </table>
+        <div class="alert alert-warn" style="margin-top:10px;">
+          <div class="alert-title">⚠️ Bilirubin 1.5 — First Time Above Range</div>
+          This jumped from normal (0.6–1.1) to 1.5 in the latest test. Possible causes: Gilbert's syndrome (benign genetic trait, more likely if not accompanied by elevated liver enzymes — and your AST/ALT/GGT are all normal), mild hemolysis, or statin interaction. With GLP-1 slowing gut motility, drug metabolism may be altered. Worth repeat testing and discussing with your doctor.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="card-title">Metabolic Risk — Genetic Context</div>
+    <div class="grid-3">
+      <div class="alert alert-purple" style="margin-bottom:0;">
+        <div class="alert-title">🧬 Genetics: Glucose/Insulin Risk = VERY HIGH</div>
+        Your 3X4 genetic test showed "Very High" impact in the Glucose &amp; Insulin pathway. This means your genes predispose you to insulin resistance and blood sugar dysregulation — yet your lab results (A1C 4.8%, glucose 83, insulin 3.5) show you have <strong>completely overcome this genetic tendency</strong> through diet, exercise, and GLP-1. This is a significant achievement.
+      </div>
+      <div class="alert alert-warn" style="margin-bottom:0;">
+        <div class="alert-title">⚠️ Statin + GLP-1 Metabolic Interaction</div>
+        Doctor noted GLP-1 slows gut motility, meaning rosuvastatin may stay in GI tract longer — potentially increasing exposure. Consider every-other-day dosing. Also: statins used &gt;3–5 years can elevate A1C — currently at 4.8% which is excellent, but annual monitoring is prudent. ALT trending from 19 (2020) → 37 (2026) — still in normal range but worth watching with statin continuation.
+      </div>
+      <div class="alert alert-good" style="margin-bottom:0;">
+        <div class="alert-title">✅ Leptin 1.5 — GLP-1 Effect</div>
+        Leptin is very low (1.5, reference 1.8–19.9 for males). This reflects weight loss from GLP-1. Low leptin after significant weight loss is normal — the body reduces leptin to signal hunger and potentially slow further weight loss. This is a known GLP-1 pathway effect and should normalize as weight stabilizes. TMAO has also dropped to 3.2, indicating better gut bacterial composition with plant-based diet.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ BLOOD & IMMUNE ═══════════════ -->
+
+<div class="section" id="blood">
+  <div class="sec-head">
+    <h2>Blood Count &amp; Immune System</h2>
+    <div class="sec-head-badges">
+      <span class="badge-warn">WBC Chronically Low</span>
+      <span class="badge-good">CBC Generally Good</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Complete Blood Count — Trend 2016–2026</div>
+      <table class="htable">
+        <thead><tr><th>Marker</th><th>What It Checks</th><th>Range</th><th>2021</th><th>2023</th><th>2024</th><th>Latest</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr style="background:rgba(245,185,66,0.03)"><td><b>WBC</b></td><td class="mlabel">Infection fighters</td><td style="color:var(--muted)">4.0–10.0</td><td>3.8</td><td>4.3</td><td>3.7</td><td><b>3.8 <span class="watch-tag">LOW</span></b></td><td><span class="pill pill-warn">⚠ Chronically low</span></td></tr>
+          <tr><td><b>RBC</b></td><td class="mlabel">Oxygen transport</td><td style="color:var(--muted)">4.6–6.2</td><td>4.63</td><td>4.69</td><td>5.04</td><td><b>5.23</b></td><td><span class="pill pill-good">✓ Good</span></td></tr>
+          <tr><td><b>Hemoglobin</b></td><td class="mlabel">Oxygen carrier protein</td><td style="color:var(--muted)">13.5–17.5</td><td>14.7</td><td>14.9</td><td>15.6</td><td><b>16.1</b></td><td><span class="pill pill-good">✓ Improving</span></td></tr>
+          <tr><td><b>Hematocrit</b></td><td class="mlabel">% of blood as red cells</td><td style="color:var(--muted)">41–53%</td><td>44.2</td><td>43.8</td><td>47.6</td><td><b>47.5</b></td><td><span class="pill pill-good">✓ Good</span></td></tr>
+          <tr><td><b>Platelets</b></td><td class="mlabel">Blood clotting</td><td style="color:var(--muted)">140–450</td><td>212</td><td>227</td><td>252</td><td><b>241</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+          <tr><td><b>MCV</b></td><td class="mlabel">Red cell size</td><td style="color:var(--muted)">82–102</td><td>96</td><td>93.4</td><td>94.4</td><td><b>90.8</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+          <tr><td><b>RDW</b></td><td class="mlabel">Red cell variation</td><td style="color:var(--muted)">11–14%</td><td>13.0</td><td>12.6</td><td>13.2</td><td><b>12.9</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+          <tr><td><b>Folate RBC</b></td><td class="mlabel">B9 in red cells</td><td style="color:var(--muted)">280–791</td><td>—</td><td>687</td><td>509</td><td><b>573</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+        </tbody>
+      </table>
+      <div class="alert alert-warn" style="margin-top:12px;">
+        <div class="alert-title">⚠️ WBC Chronically Below or At Lower Limit (2.9–4.3)</div>
+        WBC has been at or below 4.0 in 8+ consecutive tests going back to 2020. At 2.9 (Oct 2022), it was clearly below normal. Current 3.8 is borderline. This can be benign (constitutional) or related to medications (statins, thyroid meds, or GLP-1 effects). <strong>Given this pattern spans 6+ years, your doctor should assess whether bone marrow evaluation is warranted</strong> to rule out any underlying cause.
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">Immune Cell Differential (Latest)</div>
+        <table class="htable">
+          <thead><tr><th>Cell Type</th><th>Function</th><th>Latest</th><th>Range</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><b>Neutrophils %</b></td><td class="mlabel">First line defense</td><td>67%</td><td>43–76%</td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+            <tr><td><b>Abs Neutrophils</b></td><td class="mlabel">Total count</td><td>2,546</td><td>&gt;1,500</td><td><span class="pill pill-good">✓ Improving</span></td></tr>
+            <tr><td><b>Lymphocytes %</b></td><td class="mlabel">Virus/cancer fighters</td><td>24%</td><td>22–50%</td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+            <tr><td><b>Abs Lymphocytes</b></td><td class="mlabel">Total count</td><td>912</td><td>&gt;850</td><td><span class="pill pill-good">✓ Low-normal</span></td></tr>
+            <tr><td><b>Monocytes %</b></td><td class="mlabel">Pathogen engulfers</td><td>8.5%</td><td>0–8%</td><td><span class="pill pill-warn">⚠ Borderline</span></td></tr>
+            <tr><td><b>Abs Monocytes</b></td><td class="mlabel">Total count</td><td>323</td><td>200–950</td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+            <tr><td><b>Eosinophils %</b></td><td class="mlabel">Allergy/parasite</td><td>0%</td><td>0–5%</td><td><span class="pill pill-good">✓ None</span></td></tr>
+            <tr><td><b>Basophils %</b></td><td class="mlabel">Allergic reactions</td><td>0.5%</td><td>0–2%</td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">Iron &amp; Anemia Markers</div>
+        <table class="htable">
+          <thead><tr><th>Marker</th><th>Goal</th><th>2022</th><th>2024</th><th>Latest</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><b>Iron</b></td><td style="color:var(--muted)">45–182</td><td>95</td><td>56</td><td><b>122</b></td><td><span class="pill pill-good">✓ Good ↑</span></td></tr>
+            <tr><td><b>Ferritin</b></td><td style="color:var(--muted)">24–336</td><td>62</td><td>36</td><td><b>49</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted2);line-height:1.6;">Iron improved significantly from 56 (2024) to 122. Ferritin at 49 is low-normal but adequate. Hemoglobin at 16.1 is your best recorded value. No signs of anemia.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ HORMONES ═══════════════ -->
+
+<div class="section" id="hormones">
+  <div class="sec-head">
+    <h2>Hormones &amp; Thyroid</h2>
+    <div class="sec-head-badges">
+      <span class="badge-warn">Testosterone Declining</span>
+      <span class="badge-warn">Reverse T3 Trending Up</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Male Hormones — Trend Analysis</div>
+      <div class="info-box"><strong>Note:</strong> Testosterone may be affected by GLP-1 (rapid weight loss can temporarily suppress testosterone), aging (normal ~1%/year decline after 30), and SHBG rising (binds testosterone, reducing what's bioavailable).</div>
+      <table class="htable">
+        <thead><tr><th>Marker</th><th>Goal</th><th>2021</th><th>2023</th><th>2024 (peak)</th><th>2025</th><th>Latest</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr style="background:rgba(245,185,66,0.03)"><td><b>Testosterone Total</b></td><td style="color:var(--muted)">175–781</td><td>331</td><td>495</td><td><b style="color:var(--good)">568</b></td><td>382</td><td><b>445 <span class="watch-tag">↓</span></b></td><td><span class="pill pill-warn">⚠ Declining</span></td></tr>
+          <tr><td><b>Free Testosterone</b></td><td style="color:var(--muted)">35–155</td><td>—</td><td>69</td><td>76.5</td><td>69.4</td><td><b>60.2</b></td><td><span class="pill pill-warn">⚠ Declining</span></td></tr>
+          <tr style="background:rgba(245,185,66,0.03)"><td><b>SHBG</b></td><td style="color:var(--muted)">10–50</td><td>—</td><td>51.7</td><td>49.8</td><td>22.9</td><td><b>40 <span class="watch-tag">Rising</span></b></td><td><span class="pill pill-warn">⚠ Rising</span></td></tr>
+          <tr><td><b>DHEA-Sulfate</b></td><td style="color:var(--muted)">70–495</td><td>—</td><td>193</td><td>—</td><td>208</td><td><b>223</b></td><td><span class="pill pill-good">✓ Stable</span></td></tr>
+          <tr><td><b>Estradiol</b></td><td style="color:var(--muted)">10–55</td><td>—</td><td>22</td><td>—</td><td>—</td><td><b>&lt;30</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+        </tbody>
+      </table>
+      <div class="alert alert-warn" style="margin-top:12px;">
+        <div class="alert-title">⚠️ Testosterone Pattern: Peaked 2024, Now Declining</div>
+        Peak was 568 ng/dL in 2024, now 445 and declining. Free testosterone followed: 76.5 → 60.2. SHBG has been oscillating but is rising again to 40. The 2025 reading of 382 suggests GLP-1's aggressive caloric restriction may have suppressed testosterone further. Important questions: Are you experiencing symptoms (fatigue, libido, mood changes, muscle loss)? If yes, discuss TRT or clomiphene citrate with your doctor.
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">Thyroid Panel <span class="card-title-badge badge-warn">Reverse T3 Concern</span></div>
+        <div class="info-box"><strong>Context:</strong> You take Liothyronine (T3) + Levothyroxine (T4). TSH being very low (0.48) is expected with T3 supplementation. The key concern is reverse T3 trending up — your body may be converting T4 into inactive rT3 instead of active T3, potentially reducing metabolic efficiency.</div>
+        <table class="htable">
+          <thead><tr><th>Marker</th><th>Goal</th><th>2021</th><th>2023</th><th>2024</th><th>Latest</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td><b>TSH</b></td><td style="color:var(--muted)">0.4–4.5</td><td>2.23</td><td>1.2</td><td>0.92</td><td><b>0.48</b></td><td><span class="pill pill-good">✓ Low (expected)</span></td></tr>
+            <tr><td><b>Free T3</b></td><td style="color:var(--muted)">2.1–4.1</td><td>3.1</td><td>2.9</td><td>2.8</td><td><b>3.2</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+            <tr><td><b>Free T4</b></td><td style="color:var(--muted)">0.61–1.85</td><td>0.87</td><td>0.6</td><td>1.2</td><td><b>1.2</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+            <tr style="background:rgba(245,185,66,0.03)"><td><b>Reverse T3</b></td><td style="color:var(--muted)">8–25</td><td>11</td><td>12</td><td>15</td><td><b>19 <span class="watch-tag">HIGH-NORMAL</span></b></td><td><span class="pill pill-warn">⚠ Rising trend</span></td></tr>
+            <tr><td><b>TPO Antibodies</b></td><td style="color:var(--muted)">&lt;9</td><td>—</td><td>&lt;1</td><td>1</td><td><b>1</b></td><td><span class="pill pill-good">✓ No Hashimoto</span></td></tr>
+          </tbody>
+        </table>
+        <div class="alert alert-warn" style="margin-top:10px;">
+          <div class="alert-title">⚠️ Reverse T3 Trend: 11→12→15→19</div>
+          Consistently rising. GLP-1 causes caloric restriction, which is a known cause of elevated rT3. Low-calorie states divert T4 to inactive rT3 as a metabolic conservation mechanism. The Selenium from your genetics results (very high detoxification pathway) and zinc both support proper T4→T3 conversion. Consider discussing a slight increase in T3 (Liothyronine) dose with your endocrinologist.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ VITAMINS ═══════════════ -->
+
+<div class="section" id="vitamins">
+  <div class="sec-head">
+    <h2>Vitamins, Minerals &amp; Micronutrients</h2>
+    <div class="sec-head-badges">
+      <span class="badge-good">Vitamin D — Major Turnaround</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Vitamins — Full History</div>
+      <table class="htable">
+        <thead><tr><th>Marker</th><th>Role</th><th>Goal</th><th>2022</th><th>2023</th><th>2024</th><th>Latest</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>Vitamin D</b></td><td class="mlabel">Bone, immune, mood</td><td style="color:var(--muted)">30–100</td><td>54.6</td><td>49</td><td>34</td><td><b>63 <span class="new">↑85%</span></b></td><td><span class="pill pill-good">✓ Excellent</span></td></tr>
+          <tr><td><b>Vitamin B12</b></td><td class="mlabel">Nerve, brain, energy</td><td style="color:var(--muted)">200–1100</td><td>&gt;1500</td><td>707</td><td>761</td><td><b>1,033</b></td><td><span class="pill pill-good">✓ Optimal</span></td></tr>
+          <tr><td><b>Folate RBC</b></td><td class="mlabel">DNA repair, heart</td><td style="color:var(--muted)">280–791</td><td>687</td><td>566</td><td>509</td><td><b>573</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+          <tr><td><b>Homocysteine</b></td><td class="mlabel">B6/B9/B12 proxy</td><td style="color:var(--muted)">5–15</td><td>13</td><td>8.5</td><td>9.0</td><td><b>10.1</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+          <tr><td><b>MethylmalonicAcid</b></td><td class="mlabel">B12 function marker</td><td style="color:var(--muted)">Normal</td><td>—</td><td>118</td><td>147</td><td><b>104</b></td><td><span class="pill pill-good">✓ Improving</span></td></tr>
+        </tbody>
+      </table>
+      <div class="alert alert-good" style="margin-top:12px;">
+        <div class="alert-title">✅ Vitamin D — Remarkable Recovery</div>
+        Dropped from 54.6 (2022) to a concerning 34 (2024) — now back to 63. The Vitamin D/K supplement (100mcg every 2 months) combined with your GLP-1 phase lifestyle is working. Target remains 50–80 for optimal cardiovascular and immune benefit.
+      </div>
+      <div class="alert alert-warn" style="margin-top:8px;">
+        <div class="alert-title">⚠️ Homocysteine Trending Up (8.5→9.0→10.1)</div>
+        Still within range but rising. High homocysteine damages arterial walls and increases clot risk — especially relevant with your cardiovascular profile. SAM-e supplementation can raise homocysteine. Folate and B12 supplementation help keep it down. Consider monitoring this more frequently.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Minerals &amp; Metals</div>
+      <table class="htable">
+        <thead><tr><th>Mineral</th><th>Role</th><th>Goal</th><th>2022</th><th>2024</th><th>Latest</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><b>Magnesium RBC</b></td><td class="mlabel">Muscle, nerve, heart</td><td style="color:var(--muted)">4.0–6.4</td><td>—</td><td>4.9</td><td><b>4.6</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+          <tr><td><b>Zinc</b></td><td class="mlabel">Immune, healing, T</td><td style="color:var(--muted)">60–130</td><td>108</td><td>75</td><td><b>76</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+          <tr><td><b>Copper</b></td><td class="mlabel">Iron metabolism</td><td style="color:var(--muted)">70–175</td><td>—</td><td>90</td><td><b>92</b></td><td><span class="pill pill-good">✓ Normal</span></td></tr>
+          <tr><td><b>Potassium</b></td><td class="mlabel">Heart rhythm</td><td style="color:var(--muted)">3.5–5.3</td><td>4.4</td><td>4.6</td><td><b>4.7</b></td><td><span class="pill pill-good">✓ Good</span></td></tr>
+          <tr><td><b>Sodium</b></td><td class="mlabel">Fluid balance</td><td style="color:var(--muted)">135–144</td><td>143</td><td>143</td><td><b>141</b></td><td><span class="pill pill-good">✓ Stable</span></td></tr>
+          <tr><td><b>Lead</b></td><td class="mlabel">Toxic exposure</td><td style="color:var(--muted)">&lt;5</td><td>0.8</td><td>—</td><td><b>&lt;1</b></td><td><span class="pill pill-good">✓ None</span></td></tr>
+          <tr><td><b>Selenium</b></td><td class="mlabel">Thyroid, antioxidant</td><td style="color:var(--muted)">63–160</td><td>167</td><td>148</td><td><b>—</b></td><td><span class="pill pill-good">✓ Good</span></td></tr>
+        </tbody>
+      </table>
+      <div class="alert alert-blue" style="margin-top:12px;">
+        <div class="alert-title">🧬 Zinc & Genetics Insight</div>
+        Your genetics (3X4) identified zinc as a key support mineral for your "Very High" oxidative stress pathway. Zinc at 76 is in normal range but toward the lower end. Zinc also supports testosterone production (Zinc → 5α-reductase). Current supplementation (Stress B Complex contains zinc) appears adequate.
+      </div>
+      <div class="opp-box" style="margin-top:12px;">
+        <div class="opp-title">Micronutrient Opportunities from Genetics</div>
+        <ul class="opp-list">
+          <li>Alpha Lipoic Acid (500mg) — Very High oxidative stress pathway</li>
+          <li>Selenium confirmed adequate (148–167 range) — thyroid support active</li>
+          <li>CoQ10 at 100mg currently — genetics says Ubiquinol 300mg optimal</li>
+          <li>B2 &amp; B6 confirmed in supplements — key for detox pathways</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ BODY COMPOSITION ═══════════════ -->
+
+<div class="section" id="dexa">
+  <div class="sec-head">
+    <h2>Body Composition — DEXA Analysis</h2>
+    <div class="sec-head-badges">
+      <span class="badge-good">Muscle Mass Excellent</span>
+      <span class="badge-good">Fat Decreasing</span>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:18px;">
+    <div class="stat-card good">
+      <div class="stat-label">Total Body Fat %</div>
+      <div class="stat-value">25.4%</div>
+      <div class="stat-sub">↓ from 27.4% in 2022</div>
+    </div>
+    <div class="stat-card good">
+      <div class="stat-label">Lean Mass</div>
+      <div class="stat-value">167.5 <span style="font-size:13px">lbs</span></div>
+      <div class="stat-sub">↑ from 160.7 in 2022</div>
+    </div>
+    <div class="stat-card neutral">
+      <div class="stat-label">Muscle Index (RSMI)</div>
+      <div class="stat-value">10.97</div>
+      <div class="stat-sub">90th percentile (2024)</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">3-Year DEXA Comparison (2022 → 2024 → 2025)</div>
+      <table class="htable">
+        <thead><tr><th>Region</th><th>Metric</th><th>Nov 2022</th><th>Feb 2024</th><th>Feb 2025</th><th>Change '22→'25</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="2"><b>Total Body</b></td><td>Fat %</td><td>27.4%</td><td>25.9%</td><td>25.4%</td><td><span class="trend-dn-good">↓ –2.0%</span></td></tr>
+          <tr><td>Lean Mass (lbs)</td><td>160.7</td><td>165.0</td><td>167.5</td><td><span class="trend-up-good">↑ +6.8 lbs</span></td></tr>
+          <tr><td rowspan="2"><b>Trunk</b></td><td>Fat %</td><td>34.1%</td><td>31.1%</td><td>32.1%</td><td><span class="trend-dn-good">↓ –2.0%</span></td></tr>
+          <tr><td>Android Fat %</td><td>37.1%</td><td>34.3%</td><td>36.1%</td><td><span class="trend-dn-good">↓ –1.0%</span></td></tr>
+          <tr><td rowspan="2"><b>Arms</b></td><td>Fat %</td><td>21.2%</td><td>21.7%</td><td>19.5%</td><td><span class="trend-dn-good">↓ –1.7%</span></td></tr>
+          <tr><td>Lean (lbs)</td><td>17.7</td><td>20.1</td><td>21.3</td><td><span class="trend-up-good">↑ +3.6 lbs</span></td></tr>
+          <tr><td rowspan="2"><b>Legs</b></td><td>Fat %</td><td>19.8%</td><td>20.3%</td><td>18.1%</td><td><span class="trend-dn-good">↓ –1.7%</span></td></tr>
+          <tr><td>Lean (lbs)</td><td>59.0</td><td>59.5</td><td>61.8</td><td><span class="trend-up-good">↑ +2.8 lbs</span></td></tr>
+          <tr><td><b>VAT (Visceral)</b></td><td>Volume</td><td>1.51</td><td>0.89</td><td>—</td><td><span class="trend-dn-good">↓ –41% (2024)</span></td></tr>
+          <tr><td><b>RMR</b></td><td>Resting Metabolic Rate</td><td>1,927</td><td>1,964</td><td>—</td><td><span class="trend-up-good">↑ +37 cal/day</span></td></tr>
+        </tbody>
+      </table>
+      <div class="alert alert-good" style="margin-top:12px;">
+        <div class="alert-title">✅ Exceptional Body Composition Progress</div>
+        You've gained 6.8 lbs of lean mass while losing fat — the gold standard of body recomposition. Your arm lean mass jumped +3.6 lbs (direct result of weightlifting). Visceral adipose tissue (VAT) dropped 41% from 2022 to 2024 — this is the most dangerous fat type for cardiovascular risk. RMR increased, meaning your metabolism is faster.
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">Muscle Quality Index</div>
+        <div style="background:var(--card2);border-radius:10px;padding:16px;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--muted2);margin-bottom:10px;">Lean Mass Index (LMI) — How you compare to peers</div>
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;">
+            <div style="text-align:center;">
+              <div style="font-size:26px;font-weight:700;color:var(--good);font-family:'IBM Plex Mono',monospace;">90th</div>
+              <div style="font-size:10px;color:var(--muted2);">Percentile<br>Feb 2024</div>
+            </div>
+            <div style="flex:1;">
+              <div class="pbar-row" style="margin-bottom:4px;"><div class="pbar-lbl" style="width:80px;">50th %ile</div><div class="pbar-track"><div class="pbar-fill" style="width:50%;background:var(--muted)"></div></div></div>
+              <div class="pbar-row" style="margin-bottom:4px;"><div class="pbar-lbl" style="width:80px;">80th %ile</div><div class="pbar-track"><div class="pbar-fill" style="width:80%;background:var(--accent)"></div></div></div>
+              <div class="pbar-row"><div class="pbar-lbl" style="width:80px;color:var(--good);">YOU: 90th</div><div class="pbar-track"><div class="pbar-fill" style="width:90%;background:var(--good)"></div></div></div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--muted2);">RSMI: 10.34 (2022) → 10.97 (2024). A high RSMI predicts lower all-cause mortality. This is a significant longevity asset.</div>
+        </div>
+        <div class="alert alert-warn">
+          <div class="alert-title">⚠️ GLP-1 Muscle Loss Risk</div>
+          GLP-1 medications can cause 25–40% of weight loss to come from lean mass if resistance training is not maintained. Your 2025 DEXA (Feb 2025) shows lean mass continuing to grow (167.5 vs 165.0 in 2024) — excellent. This means your resistance training is effectively preserving and building muscle during GLP-1 use. Continue prioritizing protein intake (ideally 160–180g/day) and resistance training.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Left/Right Symmetry &amp; Balance</div>
+        <div style="font-size:12px;color:var(--muted2);line-height:1.6;">
+          <div style="margin-bottom:8px;"><strong style="color:var(--text);">Arms (Feb 2025):</strong> Right 18.3% fat vs Left 20.8% — mild asymmetry (2.5% difference), down from 1.6% in 2022. Common finding, likely dominant arm use.</div>
+          <div><strong style="color:var(--text);">Legs (Feb 2025):</strong> Right 18.0% vs Left 18.2% — essentially symmetric. 2022 showed 1.5% asymmetry which has normalized. This is an excellent sign of balanced lower body training.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ GENETICS & GUT ═══════════════ -->
+
+<div class="section" id="genetics">
+  <div class="sec-head">
+    <h2>Genetics &amp; Gut Health</h2>
+    <div class="sec-head-badges">
+      <span class="badge-bad">3 Very High Genetic Risks</span>
+      <span class="badge-warn">Gut Dysbiosis 2022</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">3X4 Genetic Blueprint — Top Priorities (Apr 2023)</div>
+      <div class="alert alert-purple" style="margin-bottom:12px;">
+        <div class="alert-title">🧬 What This Means</div>
+        Your genes are not your destiny — they show where you're most susceptible. The fact that your blood work is excellent in most metabolic areas despite "Very High" genetic risk in three pathways demonstrates you're successfully managing these genetic predispositions.
+      </div>
+      <div class="gene-grid">
+        <div class="gene-item" style="background:rgba(240,90,110,0.08);border-color:rgba(240,90,110,0.3);grid-column:span 2;">
+          <div><div class="gene-name" style="color:var(--bad);">DETOXIFICATION</div><div class="gene-impact">Liver enzymes, toxin clearance, cellular cleaning</div></div>
+          <span class="pill pill-bad">VERY HIGH</span>
+        </div>
+        <div class="gene-item" style="background:rgba(240,90,110,0.08);border-color:rgba(240,90,110,0.3);grid-column:span 2;">
+          <div><div class="gene-name" style="color:var(--bad);">OXIDATIVE STRESS</div><div class="gene-impact">Cellular damage from "rusting" — energy, aging, cancer risk</div></div>
+          <span class="pill pill-bad">VERY HIGH</span>
+        </div>
+        <div class="gene-item" style="background:rgba(240,90,110,0.08);border-color:rgba(240,90,110,0.3);grid-column:span 2;">
+          <div><div class="gene-name" style="color:var(--bad);">GLUCOSE &amp; INSULIN</div><div class="gene-impact">Blood sugar regulation, insulin sensitivity, diabetes risk</div></div>
+          <span class="pill pill-bad">VERY HIGH</span>
+        </div>
+      </div>
+      <div style="margin-top:14px;font-size:11px;color:var(--muted2);">Notable genes tested: APOE (E3/E3 — not APOE4, favorable), MTHFR, SHBG, DIO2 (thyroid T4→T3 conversion), CYP genes (drug metabolism), F2/F5 (clotting), PON1 (oxidative stress)</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Genetics → Blood Work Cross-Reference</div>
+      <table class="htable">
+        <thead><tr><th>Genetic Risk</th><th>Relevant Labs</th><th>Your Status</th><th>Managed?</th></tr></thead>
+        <tbody>
+          <tr><td>Oxidative Stress (Very High)</td><td>OxLDL, F2-Isoprostane</td><td>OxLDL 54, Isoprostane ↑</td><td><span class="pill pill-warn">⚠ Partial</span></td></tr>
+          <tr><td>Glucose/Insulin (Very High)</td><td>A1C, Glucose, Insulin</td><td>4.8%, 83, 3.5</td><td><span class="pill pill-good">✓ Excellent</span></td></tr>
+          <tr><td>Detoxification (Very High)</td><td>Liver enzymes, Bilirubin</td><td>AST/ALT normal, Bili 1.5</td><td><span class="pill pill-warn">⚠ Monitor</span></td></tr>
+          <tr><td>DIO2 (T4→T3 conversion)</td><td>Free T3, Reverse T3</td><td>rT3 rising to 19</td><td><span class="pill pill-warn">⚠ Suboptimal</span></td></tr>
+          <tr><td>Lp(a) / Cardiovascular</td><td>CAC 297, Lp(a) 171</td><td>Both elevated</td><td><span class="pill pill-bad">✗ Needs Rx</span></td></tr>
+          <tr><td>SHBG gene variant</td><td>SHBG levels</td><td>SHBG oscillating (23→40→51)</td><td><span class="pill pill-warn">⚠ Monitor</span></td></tr>
+        </tbody>
+      </table>
+      <div class="opp-box" style="margin-top:12px;">
+        <div class="opp-title">Genetic Supplement Opportunities Not Yet Addressed</div>
+        <ul class="opp-list">
+          <li>Alpha-Lipoic Acid (500mg) for oxidative stress pathway — not in current stack</li>
+          <li>CoQ10: Genetics suggests Ubiquinol 300mg vs current 100mg</li>
+          <li>Sulforaphane from broccoli sprouts (20mg) for detoxification pathway</li>
+          <li>Berberine (500–1500mg) for glucose pathway — may also support weight loss</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="card-title">Gut Microbiome — Genova GI Effects (Oct 2022)</div>
+    <div class="grid-3">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;">Functional Imbalance Scores</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <div style="width:120px;font-size:12px;">Digestive Support</div>
+          <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:3px;height:8px;position:relative;"><div style="width:36%;height:100%;background:var(--warn);border-radius:3px;position:absolute;"></div></div>
+          <div style="font-size:12px;color:var(--warn);width:20px;">4</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <div style="width:120px;font-size:12px;">Inflammation Modulation</div>
+          <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:3px;height:8px;position:relative;"><div style="width:2%;height:100%;background:var(--good);border-radius:3px;position:absolute;"></div></div>
+          <div style="font-size:12px;color:var(--good);width:20px;">0</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <div style="width:120px;font-size:12px;">Microbiome Support</div>
+          <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:3px;height:8px;position:relative;"><div style="width:73%;height:100%;background:var(--bad);border-radius:3px;position:absolute;"></div></div>
+          <div style="font-size:12px;color:var(--bad);width:20px;">8</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <div style="width:120px;font-size:12px;">Prebiotic Support</div>
+          <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:3px;height:8px;position:relative;"><div style="width:2%;height:100%;background:var(--good);border-radius:3px;position:absolute;"></div></div>
+          <div style="font-size:12px;color:var(--good);width:20px;">0</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:120px;font-size:12px;">Antimicrobial Support</div>
+          <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:3px;height:8px;position:relative;"><div style="width:9%;height:100%;background:var(--accent);border-radius:3px;position:absolute;"></div></div>
+          <div style="font-size:12px;color:var(--accent);width:20px;">1</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;">Metabolic Markers (Good)</div>
+        <table class="htable" style="font-size:11px;">
+          <thead><tr><th>Marker</th><th>Result</th><th>Range</th></tr></thead>
+          <tbody>
+            <tr><td>Total SCFA</td><td style="color:var(--good)">67.7</td><td>≥23.3</td></tr>
+            <tr><td>n-Butyrate</td><td style="color:var(--good)">17.5</td><td>≥3.6</td></tr>
+            <tr><td>n-Butyrate %</td><td>25.8%</td><td>11.8–33.3%</td></tr>
+            <tr><td>Calprotectin</td><td style="color:var(--good)">&lt;16</td><td>≤50</td></tr>
+            <tr><td>Pancreatic Elastase</td><td style="color:var(--good)">316</td><td>&gt;200</td></tr>
+            <tr><td>Fecal sIgA</td><td>650</td><td>≤2,040</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;">Microbiome Gaps Found</div>
+        <div class="alert alert-warn" style="margin-bottom:0;font-size:12px;">
+          <div class="alert-title">⚠️ Key Deficiencies (2022)</div>
+          <strong style="color:var(--bad);">Low:</strong> Faecalibacterium prausnitzii (anti-inflammatory), Lactobacillus spp., Ruminococcus spp., Prevotella spp.<br><br>
+          <strong style="color:var(--good);">Good:</strong> No pathogenic bacteria, no parasites, zero inflammation score, excellent butyrate production<br><br>
+          <strong>Elevated Bacteroides-Prevotella</strong> at 5.8E9 (above 2.2E9 limit) — associated with plant-based diet but can indicate dysbiosis. TMAO improved from 4.8→3.2 suggesting gut composition improved since then.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SUPPLEMENTS ═══════════════ -->
+
+<div class="section" id="supplements">
+  <div class="sec-head">
+    <h2>Supplements &amp; Medications</h2>
+    <div class="sec-head-badges">
+      <span class="badge-neutral">4 Medications</span>
+      <span class="badge-neutral">~30 Supplements</span>
+      <span class="badge-bad">Several Stopped</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Current Medications <span class="card-title-badge badge-neutral">Updated Mar 27, 2026</span></div>
+      <table class="htable">
+        <thead><tr><th>Medication</th><th>Dose</th><th>Timing</th><th>Purpose</th><th>Lab Alignment</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>Liothyronine (T3)</b></td>
+            <td>5mcg x2</td>
+            <td>AM</td>
+            <td>Thyroid (active T3)</td>
+            <td><span class="good-tag">Free T3: 3.2 ✓</span></td>
+            <td>rT3 rising — may need dose review</td>
+          </tr>
+          <tr>
+            <td><b>Levothyroxine (T4)</b></td>
+            <td>100mcg x1</td>
+            <td>AM</td>
+            <td>Thyroid (T4)</td>
+            <td><span class="good-tag">Free T4: 1.2 ✓</span></td>
+            <td>GLP-1 may affect absorption</td>
+          </tr>
+          <tr>
+            <td><b>Ezetimibe (Zetia)</b></td>
+            <td>10mg x1</td>
+            <td>AM</td>
+            <td>Cholesterol absorption</td>
+            <td><span class="good-tag">LDL: 51 ✓✓</span></td>
+            <td>Key synergy with statin</td>
+          </tr>
+          <tr>
+            <td><b>Rosuvastatin</b></td>
+            <td>10mg x1</td>
+            <td>PM</td>
+            <td>Cholesterol production</td>
+            <td><span class="good-tag">LDL: 51 ✓✓</span> <span class="watch-tag">Bili: 1.5↑</span></td>
+            <td>Every-other-day? GLP-1 interaction</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Key Gaps — Lp(a) &amp; Advanced Cardiovascular</div>
+      <div class="alert alert-bad">
+        <div class="alert-title">🔴 No Lp(a)-Specific Treatment</div>
+        Lp(a) at 171 nmol/L is your #1 unaddressed risk. Options to discuss with cardiologist:<br>
+        • <strong>PCSK9 inhibitors (Repatha/Praluent):</strong> Reduce Lp(a) 20–30% + LDL 50–60% → could drop Lp(a) below 120 and LDL-P below 935 simultaneously<br>
+        • <strong>Bempedoic acid (Nexletol):</strong> Your doctor already mentioned this — no myopathy risk, reduces LDL 18%<br>
+        • <strong>New Lp(a)-targeting agents:</strong> Pelacarsen (Phase 3) and Olpasiran are in late trials specifically targeting Lp(a) — ask about trial eligibility
+      </div>
+      <div class="alert alert-warn">
+        <div class="alert-title">⚠️ GLP-1 — Semaglutide 2.5mg/week (Mar 2025)</div>
+        Notes indicate: most calories before 6pm, kojac rice for blood sugar, add soy yogurt. Reach out in 1 month to adjust dose. GLP-1 interactions noted: statins stay longer in gut, thyroid medication absorption may vary. Consider splitting thyroid meds from GLP-1 timing.
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="card-title">Active Supplements — Blood Work Alignment</div>
+    <table class="htable">
+      <thead><tr><th>Supplement</th><th>Dose</th><th>Purpose</th><th>Lab Evidence (Working?)</th><th>Assessment</th></tr></thead>
+      <tbody>
+        <tr><td><b class="supp-active">Vitamin D/K</b></td><td>100mcg q2mo</td><td>Bone, immune</td><td><span class="good-tag">D: 34→63 ↑85%</span></td><td>✅ Excellent — keep</td></tr>
+        <tr><td><b class="supp-active">Mega Omega-3 EPA/DHA</b></td><td>430/290mg x3</td><td>Heart, inflammation</td><td><span class="good-tag">DHA: 3.6 ✓</span> <span class="anomaly-tag">AA/EPA: 8.5 ↑↑</span></td><td>⚠️ EPA dose insufficient — consider dedicated EPA</td></tr>
+        <tr><td><b class="supp-active">Magnesium Glycinate</b></td><td>100mg AM/PM</td><td>Sleep, bone, heart</td><td><span class="good-tag">Mg RBC: 4.6 ✓</span></td><td>✅ Working — keep</td></tr>
+        <tr><td><b class="supp-active">SAM-e</b></td><td>400mg x2 AM</td><td>Depression/mood</td><td><span class="watch-tag">Hcys: 10.1 rising</span></td><td>⚠️ SAM-e can raise homocysteine — monitor</td></tr>
+        <tr><td><b class="supp-active">Optimized Folate</b></td><td>1700mcg AM</td><td>Heart/brain</td><td><span class="good-tag">Folate RBC: 573 ✓</span></td><td>✅ Keep — offsets SAM-e/homocysteine</td></tr>
+        <tr><td><b class="supp-active">l-Theanine</b></td><td>200mg PM</td><td>Sleep/stress</td><td>No direct marker</td><td>Supportive — reasonable</td></tr>
+        <tr><td><b class="supp-active">Kyolic Garlic</b></td><td>1000mg PM</td><td>Cardiovascular</td><td>No direct marker</td><td>Modest CV benefit — worth keeping</td></tr>
+        <tr><td><b class="supp-active">Arterial Protect</b></td><td>Extracts AM</td><td>Plaque stabilizer</td><td><span class="watch-tag">Lp(a): 171 unchanged</span></td><td>⚠️ No evidence of Lp(a) effect — supplements cannot fix this</td></tr>
+        <tr><td><b class="supp-active">CoQ10</b></td><td>100mg PM</td><td>Heart, statin support</td><td>No direct marker</td><td>✅ Essential with rosuvastatin — genetics suggests 300mg (Ubiquinol)</td></tr>
+        <tr><td><b class="supp-active">Electrolytes (Na/Mg/K)</b></td><td>125mg x2</td><td>Minerals</td><td><span class="good-tag">K: 4.7, Na: 141 ✓</span></td><td>✅ Good especially on GLP-1</td></tr>
+        <tr><td><b class="supp-active">Ashwagandha</b></td><td>PM as needed</td><td>Stress</td><td>No direct marker</td><td>May modestly support cortisol and testosterone</td></tr>
+        <tr><td><b class="supp-active">Organic Prebiotic Fiber</b></td><td>AM</td><td>Gut health</td><td><span class="good-tag">TMAO: 3.2 ↓ (improving)</span></td><td>✅ Gut health improving</td></tr>
+        <tr><td><b class="supp-active">Psyllium Husk</b></td><td>AM</td><td>Fiber, gut</td><td>Supports LDL, gut motility</td><td>✅ Keep — complements GLP-1 fiber need</td></tr>
+        <tr><td><b class="supp-active">Stress B Complex</b></td><td>AM/PM</td><td>B vitamins</td><td><span class="good-tag">B12: 1033 ✓</span></td><td>✅ Supporting good B levels</td></tr>
+        <tr><td><b class="supp-active">Motil Pro</b></td><td>—</td><td>GI motility</td><td>GLP-1 slows gut</td><td>✅ Important with GLP-1 (heartburn/nausea prevention)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="card-title">Stopped Supplements <span class="card-title-badge badge-bad">No Longer Taking</span></div>
+    <table class="htable">
+      <thead><tr><th>Supplement</th><th>Was For</th><th>Reason Stopped?</th><th>Lab Impact</th></tr></thead>
+      <tbody>
+        <tr><td><b class="supp-stopped">Nanoemulsified DIM</b></td><td>Hormones/Detox</td><td>Listed as stopped</td><td>Estradiol &lt;30 still normal</td></tr>
+        <tr><td><b class="supp-stopped">Liposomal Glutathione</b></td><td>Detox/antioxidant</td><td>Listed as stopped</td><td><span class="anomaly-tag">F2-Isoprostane rising — oxidative stress up</span></td></tr>
+        <tr><td><b class="supp-stopped">Arterosil HP</b></td><td>Vascular glycocalyx</td><td>Listed as stopped</td><td>LP PLA2 still improving (lag effect possible)</td></tr>
+        <tr><td><b class="supp-stopped">Resveratrol</b></td><td>Immune/metabolic</td><td>Listed as stopped</td><td>Genetics recommended for glucose pathway</td></tr>
+        <tr><td><b class="supp-stopped">Turmero (Turmeric)</b></td><td>Anti-inflammatory</td><td>Listed as stopped</td><td>AA/EPA ratio worsened — loss of anti-inflammatory support</td></tr>
+        <tr><td><b class="supp-stopped">5-HTP</b></td><td>Sleep/stress</td><td>Listed as stopped (you asked about it)</td><td>Was a long-term concern with SAM-e combo</td></tr>
+        <tr><td><b class="supp-stopped">Glycine</b></td><td>Sleep, collagen</td><td>Listed as stopped</td><td>No direct marker</td></tr>
+      </tbody>
+    </table>
+    <div class="alert alert-warn" style="margin-top:12px;">
+      <div class="alert-title">⚠️ Stopping Glutathione + Turmeric May Explain Rising F2-Isoprostane</div>
+      F2-Isoprostane went from 0.29 → 0.45, suggesting increased oxidative stress. Both liposomal glutathione (master antioxidant) and turmeric (potent anti-inflammatory) were removed from your stack. Your genetics show VERY HIGH oxidative stress pathway. Consider whether reintroducing one of these is warranted — or replacing with Alpha Lipoic Acid (500mg) as your genetics specifically recommend.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DOCTOR QUESTIONS ═══════════════ -->
+
+<div class="section" id="questions">
+  <div class="sec-head">
+    <h2>Doctor &amp; Cardiologist Questions</h2>
+    <div class="sec-head-badges">
+      <span class="badge-bad">4 Urgent</span>
+      <span class="badge-warn">8 Important</span>
+      <span class="badge-neutral">6 Monitoring</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">🫀 Cardiologist — Urgent</div>
+        <ul class="q-list">
+          <li>
+            <div class="q-num urgent">1</div>
+            <div class="q-body">
+              <div class="q-text">My Lp(a) has been 135–171 nmol/L across multiple tests and I have a CAC score of 297 (95th percentile) with confirmed Stage 2 atherosclerosis on Cleerly CTA. Is it time to add a PCSK9 inhibitor (Repatha/Praluent) to address both my LDL particle count (1,054) AND get the 20–30% Lp(a) reduction simultaneously? What is the benefit-risk tradeoff given my current rosuvastatin + ezetimibe regimen?</div>
+              <div class="q-cat"><span class="q-tag-red">URGENT</span><span class="q-tag">Lp(a) Treatment</span><span class="q-tag">Cardiology</span></div>
+            </div>
+          </li>
+          <li>
+            <div class="q-num urgent">2</div>
+            <div class="q-body">
+              <div class="q-text">You mentioned Bempedoic acid (Nexletol) and the difficulty getting it covered. Given that my LDL particle count remains above goal at 1,054 and Lp(a) at 171, has anything changed regarding coverage? Should Nexletol be added to my rosuvastatin, or would a PCSK9 inhibitor be the better single addition?</div>
+              <div class="q-cat"><span class="q-tag-red">URGENT</span><span class="q-tag">Bempedoic Acid</span><span class="q-tag">Lipid Management</span></div>
+            </div>
+          </li>
+          <li>
+            <div class="q-num urgent">3</div>
+            <div class="q-body">
+              <div class="q-text">The Jan 2024 CTA found groundglass opacities/consolidation in the posterior left lower lobe with a tiny noncalcified nodule. The radiology report suggested follow-up imaging may be warranted. Has this been addressed? Do I need a repeat chest CT or pulmonology consultation, especially given my genetics show Very High oxidative stress pathway?</div>
+              <div class="q-cat"><span class="q-tag-red">URGENT</span><span class="q-tag">Lung Nodule</span><span class="q-tag">Pulmonology</span></div>
+            </div>
+          </li>
+          <li>
+            <div class="q-num urgent">4</div>
+            <div class="q-body">
+              <div class="q-text">Should I get a repeat CAC score or a follow-up Cleerly CTA now that I've been on aggressive statin therapy for 2+ years? I'd like to know if the plaque is progressing, stable, or regressing given the CAC was 297 in December 2023.</div>
+              <div class="q-cat"><span class="q-tag-red">URGENT</span><span class="q-tag">Imaging Follow-Up</span><span class="q-tag">Plaque Monitoring</span></div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-title">⚗️ PCP — Important Questions</div>
+        <ul class="q-list">
+          <li>
+            <div class="q-num moderate">5</div>
+            <div class="q-body">
+              <div class="q-text">My WBC has been at or below 4.0 in nearly every test since 2020, dipping to 2.9 in Oct 2022. This is a 6+ year pattern. Is this constitutional leukopenia or should we do a bone marrow evaluation or hematology consult? Could this be medication-related (statin, thyroid meds, GLP-1)?</div>
+              <div class="q-cat"><span class="q-tag-warn">IMPORTANT</span><span class="q-tag">WBC/Immune</span></div>
+            </div>
+          </li>
+          <li>
+            <div class="q-num moderate">6</div>
+            <div class="q-body">
+              <div class="q-text">Bilirubin jumped from normal (0.6–1.1) to 1.5 in my latest test — the first time above the 1.2 upper limit. My other liver markers (AST 27, ALT 37, GGT 13) are all normal. Could this be Gilbert's syndrome, mild hemolysis, or is it related to statin + GLP-1 interaction? Should I repeat this test?</div>
+              <div class="q-cat"><span class="q-tag-warn">IMPORTANT</span><span class="q-tag">Liver/Bilirubin</span></div>
+            </div>
+          </li>
+          <li>
+            <div class="q-num moderate">7</div>
+            <div class="q-body">
+              <div class="q-text">You noted GLP-1 slows gut motility and statins may accumulate. Should I switch rosuvastatin to every-other-day dosing? My LDL is now 51 — perhaps I can reduce the statin dose slightly while adding a PCSK9i or Nexletol for the particles/Lp(a)? Also, my A1C is 4.8% — when should we next check for statin-induced A1C elevation?</div>
+              <div class="q-cat"><span class="q-tag-warn">IMPORTANT</span><span class="q-tag">Statin/GLP-1</span><span class="q-tag">Drug Interaction</span></div>
+            </div>
+          </li>
+          <li>
+            <div class="q-num moderate">8</div>
+            <div class="q-body">
+              <div class="q-text">My testosterone has declined from 568 (2024 peak) → 382 (2025) → 445 (2026), with free testosterone now 60.2 and SHBG rising to 40. Is this GLP-1-related caloric restriction or age-related? Should I consider clomiphene citrate, DHEA optimization, or TRT evaluation? Are there symptoms I should watch for?</div>
+              <div class="q-cat"><span class="q-tag-warn">IMPORTANT</span><span class="q-tag">Testosterone</span><span class="q-tag">Hormones</span></div>
+            </div>
+          </li>
+          <li>
+            <div class="q-num moderate">9</div>
+            <div class="q-body">
+              <div class="q-text">My AA/EPA ratio has worsened from 4.5 to 8.5 despite taking 3 omega-3 capsules daily. My F2-Isoprostane also increased from 0.29 to 0.45 indicating rising oxidative stress. My genetics show VERY HIGH oxidative stress pathway. Should I consider prescription Vascepa (pure EPA) for combined cardiovascular and inflammation benefit? What do you recommend?</div>
+              <div class="q-cat"><span class="q-tag-warn">IMPORTANT</span><span class="q-tag">Omega-3</span><span class="q-tag">Inflammation</span></div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">🦋 Thyroid & Hormone Questions</div>
+      <ul class="q-list">
+        <li>
+          <div class="q-num">10</div>
+          <div class="q-body">
+            <div class="q-text">Reverse T3 has been trending consistently upward: 11→12→15→19. All within range, but the direction is concerning. Could this be driven by GLP-1 caloric restriction (a known cause of elevated rT3)? Should we adjust my T3 (Liothyronine) dose upward to compensate? Would Free T3:Reverse T3 ratio be worth calculating?</div>
+            <div class="q-cat"><span class="q-tag">Thyroid</span><span class="q-tag">GLP-1 Interaction</span></div>
+          </div>
+        </li>
+        <li>
+          <div class="q-num">11</div>
+          <div class="q-body">
+            <div class="q-text">My DIO2 gene (thyroid T4→T3 conversion) has a variant that may impair conversion. Could this explain why I need both T3 and T4 supplementation? And does the rising reverse T3 suggest I should shift more toward T3 supplementation vs. T4?</div>
+            <div class="q-cat"><span class="q-tag">Genetics</span><span class="q-tag">Thyroid</span></div>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">💊 Supplement Review Questions</div>
+      <ul class="q-list">
+        <li>
+          <div class="q-num">12</div>
+          <div class="q-body">
+            <div class="q-text">I stopped Liposomal Glutathione and Turmero (turmeric), and my F2-Isoprostane (oxidative stress) has increased from 0.29 to 0.45. My genetics show Very High oxidative stress pathway. Should I reintroduce glutathione, add Alpha-Lipoic Acid (500mg), or consider prescription N-Acetyl-Cysteine to address this?</div>
+            <div class="q-cat"><span class="q-tag">Antioxidants</span><span class="q-tag">Oxidative Stress</span></div>
+          </div>
+        </li>
+        <li>
+          <div class="q-num">13</div>
+          <div class="q-body">
+            <div class="q-text">I'm currently taking 100mg CoQ10. My genetics suggest Ubiquinol at 300mg is optimal for my oxidative stress pathway, and statins are known to deplete CoQ10. Should I increase to 300mg Ubiquinol (active form)? Is there any concern about interactions?</div>
+            <div class="q-cat"><span class="q-tag">CoQ10</span><span class="q-tag">Statin Support</span></div>
+          </div>
+        </li>
+        <li>
+          <div class="q-num">14</div>
+          <div class="q-body">
+            <div class="q-text">My GLP-1 microbiome (Pendulum Metabolic Pro) — should I still be taking this? My A1C is 4.8%, insulin is 3.5, and glucose is 83 — all excellent. Is there continued benefit at this level of metabolic control? Also: should I be concerned about the 2022 Genova gut test showing low Faecalibacterium prausnitzii and Lactobacillus — should I repeat this test?</div>
+            <div class="q-cat"><span class="q-tag">GLP-1 Probiotic</span><span class="q-tag">Gut Health</span></div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Summary priority table -->
+
+  <div class="card" style="margin-top:14px;">
+    <div class="card-title">Questions Summary — Priority Matrix</div>
+    <table class="htable">
+      <thead><tr><th>#</th><th>Question</th><th>Category</th><th>Who to Ask</th><th>Priority</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>PCSK9 inhibitor for Lp(a) + LDL particles</td><td>Lipids/CV</td><td>Cardiologist</td><td><span class="pill pill-bad">Urgent</span></td></tr>
+        <tr><td>2</td><td>Bempedoic acid coverage update</td><td>Lipids</td><td>Cardiologist/PCP</td><td><span class="pill pill-bad">Urgent</span></td></tr>
+        <tr><td>3</td><td>Lung nodule follow-up status</td><td>Pulmonology</td><td>PCP/Radiologist</td><td><span class="pill pill-bad">Urgent</span></td></tr>
+        <tr><td>4</td><td>Repeat CAC or Cleerly CTA</td><td>Imaging</td><td>Cardiologist</td><td><span class="pill pill-bad">Urgent</span></td></tr>
+        <tr><td>5</td><td>WBC pattern — hematology consult?</td><td>Hematology</td><td>PCP</td><td><span class="pill pill-warn">Important</span></td></tr>
+        <tr><td>6</td><td>Bilirubin 1.5 — Gilbert's or drug effect?</td><td>Liver</td><td>PCP</td><td><span class="pill pill-warn">Important</span></td></tr>
+        <tr><td>7</td><td>Statin dosing adjustment with GLP-1</td><td>Metabolism</td><td>PCP</td><td><span class="pill pill-warn">Important</span></td></tr>
+        <tr><td>8</td><td>Testosterone decline — intervention?</td><td>Hormones</td><td>PCP/Endocrinologist</td><td><span class="pill pill-warn">Important</span></td></tr>
+        <tr><td>9</td><td>AA/EPA ratio — prescription Vascepa?</td><td>Inflammation</td><td>PCP/Cardiologist</td><td><span class="pill pill-warn">Important</span></td></tr>
+        <tr><td>10</td><td>Reverse T3 rising — adjust T3 dose?</td><td>Thyroid</td><td>Endocrinologist</td><td><span class="pill pill-neutral">Monitoring</span></td></tr>
+        <tr><td>11</td><td>DIO2 gene and thyroid dosing strategy</td><td>Genetics/Thyroid</td><td>Endocrinologist</td><td><span class="pill pill-neutral">Monitoring</span></td></tr>
+        <tr><td>12</td><td>F2-Isoprostane rising — antioxidant strategy</td><td>Oxidative stress</td><td>Functional medicine</td><td><span class="pill pill-neutral">Monitoring</span></td></tr>
+        <tr><td>13</td><td>CoQ10 dose — increase to 300mg Ubiquinol?</td><td>Supplement</td><td>PCP</td><td><span class="pill pill-neutral">Monitoring</span></td></tr>
+        <tr><td>14</td><td>Gut health — repeat Genova test?</td><td>Microbiome</td><td>Functional medicine</td><td><span class="pill pill-neutral">Monitoring</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>
